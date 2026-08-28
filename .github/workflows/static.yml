@@ -5,7 +5,6 @@ on:
     branches: ["main"]
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
   pages: write
@@ -24,12 +23,12 @@ jobs:
           fetch-depth: 1
 
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v4 # Note: bumped or configured cleanly
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.' # Change this if your site files are in a specific folder like 'dist' or 'public'
+          path: '.' # Change to 'dist' or 'public' if your files are in a subfolder
 
       - name: Deploy to GitHub Pages
         id: deployment
