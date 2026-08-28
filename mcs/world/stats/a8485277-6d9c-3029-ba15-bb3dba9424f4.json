@@ -1,0 +1,42 @@
+{
+  "stats": {
+    "minecraft:custom": {
+      "minecraft:time_since_rest": 25345,
+      "minecraft:walk_one_cm": 23671,
+      "minecraft:leave_game": 4,
+      "minecraft:mob_kills": 2,
+      "minecraft:walk_under_water_one_cm": 699,
+      "minecraft:damage_taken": 210,
+      "minecraft:damage_dealt": 232,
+      "minecraft:play_time": 36811,
+      "minecraft:jump": 469,
+      "minecraft:time_since_death": 25314,
+      "minecraft:sprint_one_cm": 39716,
+      "minecraft:fall_one_cm": 11950,
+      "minecraft:swim_one_cm": 11266,
+      "minecraft:total_world_time": 36811,
+      "minecraft:fly_one_cm": 184735,
+      "minecraft:walk_on_water_one_cm": 3405,
+      "minecraft:crouch_one_cm": 949,
+      "minecraft:sneak_time": 434,
+      "minecraft:deaths": 1
+    },
+    "minecraft:picked_up": {
+      "minecraft:birch_sapling": 1,
+      "minecraft:wheat_seeds": 1,
+      "minecraft:leather": 2,
+      "minecraft:beef": 3
+    },
+    "minecraft:used": {
+      "minecraft:granite": 3
+    },
+    "minecraft:mined": {
+      "minecraft:short_grass": 5,
+      "minecraft:birch_leaves": 1
+    },
+    "minecraft:killed": {
+      "minecraft:cow": 2
+    }
+  },
+  "DataVersion": 4671
+}

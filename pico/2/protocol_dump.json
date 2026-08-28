@@ -1,0 +1,208 @@
+{
+  "login": [
+    "container",
+    [
+      {
+        "name": "entityId",
+        "type": "i32"
+      },
+      {
+        "name": "isHardcore",
+        "type": "bool"
+      },
+      {
+        "name": "worldNames",
+        "type": [
+          "array",
+          {
+            "countType": "varint",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "name": "maxPlayers",
+        "type": "varint"
+      },
+      {
+        "name": "viewDistance",
+        "type": "varint"
+      },
+      {
+        "name": "simulationDistance",
+        "type": "varint"
+      },
+      {
+        "name": "reducedDebugInfo",
+        "type": "bool"
+      },
+      {
+        "name": "enableRespawnScreen",
+        "type": "bool"
+      },
+      {
+        "name": "doLimitedCrafting",
+        "type": "bool"
+      },
+      {
+        "name": "worldState",
+        "type": "SpawnInfo"
+      },
+      {
+        "name": "enforcesSecureChat",
+        "type": "bool"
+      }
+    ]
+  ],
+  "position": [
+    "container",
+    [
+      {
+        "name": "x",
+        "type": "f64"
+      },
+      {
+        "name": "y",
+        "type": "f64"
+      },
+      {
+        "name": "z",
+        "type": "f64"
+      },
+      {
+        "name": "yaw",
+        "type": "f32"
+      },
+      {
+        "name": "pitch",
+        "type": "f32"
+      },
+      {
+        "name": "flags",
+        "type": "PositionUpdateRelatives"
+      },
+      {
+        "name": "teleportId",
+        "type": "varint"
+      }
+    ]
+  ],
+  "packet_map": [
+    "container",
+    [
+      {
+        "name": "itemDamage",
+        "type": "varint"
+      },
+      {
+        "name": "scale",
+        "type": "i8"
+      },
+      {
+        "name": "locked",
+        "type": "bool"
+      },
+      {
+        "name": "icons",
+        "type": [
+          "option",
+          [
+            "array",
+            {
+              "countType": "varint",
+              "type": [
+                "container",
+                [
+                  {
+                    "name": "type",
+                    "type": "varint"
+                  },
+                  {
+                    "name": "x",
+                    "type": "i8"
+                  },
+                  {
+                    "name": "z",
+                    "type": "i8"
+                  },
+                  {
+                    "name": "direction",
+                    "type": "u8"
+                  },
+                  {
+                    "name": "displayName",
+                    "type": [
+                      "option",
+                      "anonymousNbt"
+                    ]
+                  }
+                ]
+              ]
+            }
+          ]
+        ]
+      },
+      {
+        "name": "columns",
+        "type": "u8"
+      },
+      {
+        "name": "rows",
+        "type": [
+          "switch",
+          {
+            "compareTo": "columns",
+            "fields": {
+              "0": "void"
+            },
+            "default": "u8"
+          }
+        ]
+      },
+      {
+        "name": "x",
+        "type": [
+          "switch",
+          {
+            "compareTo": "columns",
+            "fields": {
+              "0": "void"
+            },
+            "default": "u8"
+          }
+        ]
+      },
+      {
+        "name": "y",
+        "type": [
+          "switch",
+          {
+            "compareTo": "columns",
+            "fields": {
+              "0": "void"
+            },
+            "default": "u8"
+          }
+        ]
+      },
+      {
+        "name": "data",
+        "type": [
+          "switch",
+          {
+            "compareTo": "columns",
+            "fields": {
+              "0": "void"
+            },
+            "default": [
+              "buffer",
+              {
+                "countType": "varint"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  ]
+}

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AppCraft Studio | Executable App & Command Creator</title>
+  <!-- Google Fonts: Inter & Fira Code -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="dark-theme">
+
+  <div class="app-layout">
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="brand-icon">
+          <i data-lucide="terminal"></i>
+        </div>
+        <div class="brand-text">
+          <h1>AppCraft <span>Studio</span></h1>
+          <span class="brand-tagline">Executable App & Command Automation Creator</span>
+        </div>
+      </div>
+
+      <!-- System Telemetry Widget -->
+      <div class="system-widget" id="systemWidget">
+        <div class="widget-item">
+          <i data-lucide="cpu"></i>
+          <span id="sysCpu">-- CPUs</span>
+        </div>
+        <div class="widget-item">
+          <i data-lucide="hard-drive"></i>
+          <span id="sysRam">-- GB RAM</span>
+        </div>
+        <div class="widget-item">
+          <i data-lucide="monitor"></i>
+          <span id="sysOs">Windows</span>
+        </div>
+        <div class="connection-badge status-connected" id="connectionBadge">
+          <span class="pulse-dot"></span>
+          <span id="connText">Connected</span>
+        </div>
+      </div>
+
+      <!-- Header Actions -->
+      <div class="header-actions">
+        <button class="btn btn-secondary" id="btnImportJson">
+          <i data-lucide="upload"></i> Import App
+        </button>
+        <button class="btn btn-secondary" id="btnExportAll">
+          <i data-lucide="download"></i> Export Preset
+        </button>
+        <button class="btn btn-primary btn-glow" id="btnCreateApp">
+          <i data-lucide="plus-circle"></i> Create New App
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+      <!-- Sidebar Navigation -->
+      <aside class="app-sidebar">
+        <div class="search-box">
+          <i data-lucide="search"></i>
+          <input type="text" id="searchInput" placeholder="Search apps, commands...">
+        </div>
+
+        <div class="nav-section-title">SUITES & CATEGORIES</div>
+        <nav class="sidebar-nav" id="sidebarNav">
+          <button class="nav-item active" data-category="all">
+            <i data-lucide="layout-grid"></i> All Apps <span class="badge" id="badgeAllCount">0</span>
+          </button>
+          <!-- Dynamic categories populated by JS -->
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="footer-card">
+            <i data-lucide="sparkles"></i>
+            <div>
+              <strong>Executable Apps</strong>
+              <p>Turn any shell command or script into a 1-click executable app!</p>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Center App Workspace -->
+      <main class="app-workspace">
+        <div class="workspace-header">
+          <div class="workspace-title">
+            <h2 id="currentCategoryTitle">All Executable Apps</h2>
+            <p id="currentCategoryDesc">Manage, customize, code, and execute your custom buttons and automation scripts</p>
+          </div>
+          <div class="workspace-actions">
+            <span class="filter-count" id="displayedAppsCount">Showing 0 apps</span>
+          </div>
+        </div>
+
+        <!-- App Cards Grid -->
+        <div class="app-grid" id="appGrid">
+          <!-- Dynamic App Cards rendered by app.js -->
+        </div>
+      </main>
+    </div>
+
+    <!-- Terminal Drawer (Resizable / Expandable) -->
+    <section class="terminal-drawer" id="terminalDrawer">
+      <div class="terminal-header">
+        <div class="terminal-title">
+          <i data-lucide="terminal" class="term-icon"></i>
+          <span>Execution Output Terminal</span>
+          <span class="terminal-status-badge status-idle" id="termStatusBadge">IDLE</span>
+          <span class="pid-badge" id="termPidBadge" style="display:none;">PID: --</span>
+          <span class="timer-badge" id="termTimerBadge">0.0s</span>
+        </div>
+        <div class="terminal-controls">
+          <button class="term-btn btn-danger" id="btnKillProcess" disabled title="Kill Running Process">
+            <i data-lucide="square"></i> Stop Process
+          </button>
+          <button class="term-btn" id="btnClearTerm" title="Clear Terminal Log">
+            <i data-lucide="trash-2"></i> Clear
+          </button>
+          <button class="term-btn" id="btnCopyTerm" title="Copy Log to Clipboard">
+            <i data-lucide="copy"></i> Copy Output
+          </button>
+          <button class="term-btn" id="btnToggleTermHeight" title="Toggle Terminal Size">
+            <i data-lucide="maximize-2"></i>
+          </button>
+        </div>
+      </div>
+      <div class="terminal-body" id="terminalBody">
+        <div class="terminal-placeholder">
+          <i data-lucide="play-circle"></i>
+          <p>Ready to run apps. Select any app card above and click <strong>RUN APP</strong>.</p>
+        </div>
+        <pre class="terminal-logs" id="terminalLogs" style="display:none;"></pre>
+      </div>
+    </section>
+  </div>
+
+  <!-- Create / Edit App Modal -->
+  <div class="modal-overlay" id="appEditorModal">
+    <div class="modal-card modal-large">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i data-lucide="code-2" class="modal-icon"></i>
+          <div>
+            <h3 id="editorModalTitle">Create New Executable App</h3>
+            <p>Code your script behavior, parameters, and action controls</p>
+          </div>
+        </div>
+        <button class="modal-close" id="btnCloseModal"><i data-lucide="x"></i></button>
+      </div>
+
+      <div class="modal-body">
+        <form id="appForm">
+          <input type="hidden" id="editAppId">
+
+          <div class="form-row">
+            <div class="form-group flex-2">
+              <label for="appName">App / Button Title <span class="req">*</span></label>
+              <input type="text" id="appName" placeholder="e.g. Quick Port Scanner" required>
+            </div>
+            <div class="form-group flex-1">
+              <label for="appCategory">Suite Category</label>
+              <input type="text" id="appCategory" placeholder="e.g. System Tools" list="categoryOptions" required>
+              <datalist id="categoryOptions">
+                <option value="System & Network Suite">
+                <option value="Developer Workspace">
+                <option value="Scripting & Speech Studio">
+                <option value="Custom Macros">
+              </datalist>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="appType">Runtime Engine <span class="req">*</span></label>
+              <select id="appType" required>
+                <option value="powershell">PowerShell Script (.ps1)</option>
+                <option value="cmd">Windows CMD / Batch (.bat)</option>
+                <option value="node">Node.js JavaScript Script (.js)</option>
+                <option value="python">Python Script (.py)</option>
+              </select>
+            </div>
+            <div class="form-group flex-1">
+              <label for="appColor">Button Accent Color</label>
+              <input type="color" id="appColor" value="#3b82f6">
+            </div>
+            <div class="form-group flex-1">
+              <label for="appIcon">Lucide Icon Name</label>
+              <input type="text" id="appIcon" placeholder="e.g. terminal, activity, cpu, zap" value="terminal">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="appDescription">Short Description</label>
+            <input type="text" id="appDescription" placeholder="Briefly describe what this button executable does...">
+          </div>
+
+          <!-- Dynamic Parameter Builder -->
+          <div class="section-divider">
+            <span>INPUT PARAMETERS & TEMPLATE VARIABLES</span>
+          </div>
+
+          <div class="params-builder">
+            <p class="help-text">Define custom text boxes, file paths, or default numbers that users fill out before running. Reference them in code using <code>{{variable_id}}</code>.</p>
+            
+            <div id="paramsList" class="params-list">
+              <!-- Parameter item rows inserted here -->
+            </div>
+
+            <button type="button" class="btn btn-secondary btn-sm" id="btnAddParam">
+              <i data-lucide="plus"></i> Add Input Parameter
+            </button>
+          </div>
+
+          <!-- Code / Command Area -->
+          <div class="section-divider">
+            <span>CODE & COMMAND SCRIPT</span>
+          </div>
+
+          <div class="form-group">
+            <div class="editor-label-bar">
+              <label for="appCommand">Script Code / Command Prompt <span class="req">*</span></label>
+              <div class="editor-tags" id="editorTagBadges">
+                <span class="tag-label">Click tag to insert:</span>
+                <!-- Parameter insert tags -->
+              </div>
+            </div>
+            <textarea id="appCommand" rows="8" class="code-editor-area" placeholder="Write shell command or script code here... e.g. ping {{host}} -n {{count}}" required></textarea>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="btnCancelModal">Cancel</button>
+        <button type="button" class="btn btn-primary btn-glow" id="btnSaveApp">
+          <i data-lucide="check"></i> Save Executable App
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Export Executable Launcher Modal -->
+  <div class="modal-overlay" id="exportModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i data-lucide="download" class="modal-icon"></i>
+          <div>
+            <h3>Export Standalone Launcher</h3>
+            <p>Generate executable script files to run outside the browser</p>
+          </div>
+        </div>
+        <button class="modal-close" id="btnCloseExportModal"><i data-lucide="x"></i></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="export-target-info" id="exportTargetInfo">
+          <!-- Target App preview -->
+        </div>
+
+        <div class="export-options">
+          <div class="export-option-card" data-format="bat">
+            <div class="opt-icon bat-color"><i data-lucide="terminal"></i></div>
+            <div class="opt-details">
+              <strong>Windows Batch Executable (.bat)</strong>
+              <p>Runs directly in Windows Command Prompt with interactive parameter prompts.</p>
+            </div>
+            <i data-lucide="chevron-right"></i>
+          </div>
+
+          <div class="export-option-card" data-format="ps1">
+            <div class="opt-icon ps-color"><i data-lucide="code"></i></div>
+            <div class="opt-details">
+              <strong>PowerShell Script Launcher (.ps1)</strong>
+              <p>Native PowerShell automation script with rich color output and input dialogs.</p>
+            </div>
+            <i data-lucide="chevron-right"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden File Input for JSON Import -->
+  <input type="file" id="jsonFileInput" accept=".json" style="display: none;">
+
+  <script src="app.js"></script>
+</body>
+</html>

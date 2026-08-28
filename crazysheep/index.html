@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CrAzYcATtlE3D - Edited by Gregory (Classic 480x640)</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Local Three.js 3D WebGL Engine (100% Offline & Self-Contained) -->
+  <script src="three.min.js"></script>
+</head>
+<body>
+
+  <div id="game-wrapper">
+    <!-- 3D Canvas Container -->
+    <div id="canvas-container"></div>
+
+    <!-- Floating Quick Cheat Engine Button -->
+    <button id="cheat-toggle-btn">⚡ CHEATS [F4]</button>
+
+    <!-- In-Game HUD -->
+    <div id="hud-overlay">
+      <div class="hud-top-left">
+        <div class="alive-badge" id="alive-count">ALIVE: 40 / 40</div>
+        <div class="hud-watermark">CrazyCattle3D - Edited by Gregory</div>
+      </div>
+
+      <div id="killfeed"></div>
+
+      <div class="hud-bottom">
+        <div class="speedo-card" id="speedo-display">SPEED: 0 MPH</div>
+        <div class="controls-hint">
+          [W/A/S/D] Drive & Steer<br>
+          [SPACE] Bleat / Jump • [F4] Cheats
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Menu Startup Screen -->
+    <div id="menu-screen" class="screen-overlay">
+      <div class="title-container" id="title-wrapper">
+        <div class="main-title" id="title-text">CrAzYcATtlE3D</div>
+        <div class="title-sub">★ BATTLE ROYALE RAGE GAME ★ (CLICK TITLE TO SPIN!)</div>
+        <div class="title-credit">★ EDITED BY GREGORY ★</div>
+      </div>
+
+      <div class="menu-card">
+        <div class="arena-selector">
+          <button class="arrow-btn" id="prev-map-btn">◀</button>
+          <span id="map-name-label">☘ IRELAND (Rolling Hills)</span>
+          <button class="arrow-btn" id="next-map-btn">▶</button>
+        </div>
+
+        <button class="action-btn" id="start-game-btn">▶ START MATCH (40 SHEEP)</button>
+        <div style="font-size: 11px; color: var(--text-muted);">Drive downhill, ram opponents, survive!</div>
+      </div>
+
+      <div class="footer-row">
+        <div class="footer-credit">Edited by Gregory</div>
+
+        <!-- Interactive Fidget Spinner -->
+        <div id="fidget-spinner-box">
+          <canvas id="fidget-canvas" width="70" height="70"></canvas>
+          <div class="fidget-label" id="fidget-label">SPINNER</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Game Over / Victory Modal -->
+    <div id="end-screen" class="screen-overlay" style="display: none; justify-content: center; gap: 24px;">
+      <h1 id="end-title" style="font-size: 32px; font-weight: 900; color: #ef4444;">OBLITERATED!</h1>
+      <div class="menu-card" style="max-width: 320px;">
+        <div id="end-rank" style="font-size: 18px; font-weight: 800; color: #f8fafc;">Rank: #24</div>
+        <div id="end-kills" style="font-size: 14px; font-weight: 700; color: #facc15;">Sheep Rammed: 0</div>
+        <button class="action-btn" id="restart-btn" style="margin-top: 10px;">↺ PLAY AGAIN</button>
+        <button class="cheat-btn" id="back-menu-btn">MAIN MENU</button>
+      </div>
+      <div class="footer-credit">CrazyCattle3D - Edited by Gregory</div>
+    </div>
+
+    <!-- F4 Cheat Engine Modal -->
+    <div id="cheat-modal">
+      <div class="cheat-header">
+        <div class="cheat-title">⚡ CRAZY CATTLE CHEAT ENGINE ⚡</div>
+        <div class="cheat-sub">★ EDITED BY GREGORY • [F4] KEY TOGGLES MENU ★</div>
+      </div>
+
+      <div class="cheat-grid">
+        <button class="cheat-btn" id="btn-freeze">❄ TIME: RUNNING [OFF]</button>
+        <button class="cheat-btn" id="btn-fly">🕊 FLY MODE: [OFF]</button>
+        <button class="cheat-btn" id="btn-speed">⚡ SPEED: 1x (NORMAL)</button>
+        <button class="cheat-btn" id="btn-god">🛡 GOD MODE: [OFF]</button>
+        <button class="cheat-btn" id="btn-heavy">🚜 SUPER HEAVY: [OFF]</button>
+        <button class="cheat-btn" id="btn-shockwave">📢 SHOCKWAVE BLEAT</button>
+        <button class="cheat-btn" id="btn-gravity">🌙 MOON GRAV: [OFF]</button>
+        <button class="cheat-btn" id="btn-slowmo">⏱ SLOW-MO (0.25x)</button>
+        <button class="cheat-btn danger" id="btn-explode">💥 EXPLODE ALL BOTS</button>
+        <button class="cheat-btn" id="btn-unflip">🔄 UNFLIP SHEEP</button>
+      </div>
+
+      <div class="cheat-status-text" id="cheat-status">Ready! Click any cheat to activate.</div>
+      <button class="cheat-close-btn" id="btn-close-cheat">✖ RESUME GAME / CLOSE MENU [F4]</button>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>

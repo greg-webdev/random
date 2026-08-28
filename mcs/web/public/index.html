@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fabric MCS 1.21.11 Panel</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+    <link rel="stylesheet" href="style.css">
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-text">
+                    <h2>FABRIC MCS</h2>
+                    <span class="version-tag">MC 1.21.11</span>
+                </div>
+            </div>
+            <nav class="nav-menu">
+                <button class="nav-btn active" data-tab="dashboard">
+                    Dashboard
+                </button>
+                <button class="nav-btn" data-tab="console">
+                    Live Console
+                </button>
+                <button class="nav-btn" data-tab="players">
+                    Player Tracker & Camera
+                </button>
+                <button class="nav-btn" data-tab="cmdgen">
+                    Command Generator
+                </button>
+                <button class="nav-btn" data-tab="settings">
+                    Server Settings
+                </button>
+                <button class="nav-btn" data-tab="mods">
+                    Mods Manager
+                </button>
+
+
+            </nav>
+            <div class="server-badge">
+                <div class="status-indicator" id="sidebar-status-dot"></div>
+                <span id="sidebar-status-text">OFFLINE</span>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Dashboard View -->
+            <section id="tab-dashboard" class="tab-content active">
+                <header class="page-header">
+                    <h1>Server Overview</h1>
+                    <div class="actions">
+                        <button id="btn-start" class="btn btn-primary">Start Server</button>
+                        <button id="btn-stop" class="btn btn-danger" disabled>Stop Server</button>
+                    </div>
+                </header>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <span class="stat-label">Server State</span>
+                        <span class="stat-value" id="stat-state">OFFLINE</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-label">Minecraft Version</span>
+                        <span class="stat-value">Fabric 1.21.11</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-label">Server Port</span>
+                        <span class="stat-value" id="stat-port">25565</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-label">Online Mode</span>
+                        <span class="stat-value" id="stat-online-mode">Disabled</span>
+                    </div>
+                </div>
+
+                <div class="card console-preview-card">
+                    <div class="card-header page-header">
+                        <h3>Recent Console Activity</h3>
+                        <button class="btn btn-secondary btn-sm" onclick="switchTab('console')">View Console</button>
+                    </div>
+                    <div class="console-mini" id="console-mini"></div>
+                </div>
+            </section>
+
+            <!-- Console View -->
+            <section id="tab-console" class="tab-content">
+                <header class="page-header">
+                    <h1>Live Server Console</h1>
+                    <button class="btn btn-secondary btn-sm" id="btn-clear-console">Clear Logs</button>
+                </header>
+                <div class="console-container">
+                    <div class="console-box" id="console-box"></div>
+                    <div class="console-input-row">
+                        <input type="text" id="console-input" placeholder="Type command (e.g. op player, gamemode creative, say hello)..." />
+                        <button id="btn-send-cmd" class="btn btn-primary">Send</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Player Tracker & Spectator View -->
+            <section id="tab-players" class="tab-content">
+                <header class="page-header">
+                    <h1>Live Player Tracker & Spectator Bot</h1>
+                    <div class="actions">
+                        <button id="btn-refresh-players" class="btn btn-secondary btn-sm">Refresh List</button>
+                    </div>
+                </header>
+
+                <div class="players-container">
+                    <!-- Left: Player Cards & Exact Coordinates -->
+                    <div class="players-list-panel">
+                        <h3>Online Players (<span id="online-player-count">0</span>)</h3>
+                        <div id="players-cards-grid" class="players-grid">
+                            <div class="empty-state">No players currently logged in</div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Spectator Bot Controls & Live Stream Canvas -->
+                    <div class="spectator-bot-panel">
+                        <h3>Bot Spectator Camera</h3>
+                        <div class="bot-status-bar">
+                            <div>Bot Status: <span id="bot-connection-status" class="status-offline">Offline</span></div>
+                            <div>Spectating Target: <span id="bot-spectate-target">None</span></div>
+                        </div>
+
+                        <div class="bot-view-container">
+                            <iframe id="spectator-iframe" src="/viewer" style="width:100%; height:100%; border:none; background:#000000;"></iframe>
+                            <div class="bot-overlay-hud" id="bot-overlay-hud">
+
+
+
+                                <div>CAMERA BOT: <span id="hud-bot-target-name">NONE</span></div>
+                                <div>X: <span id="hud-bot-x">0</span> | Y: <span id="hud-bot-y">70</span> | Z: <span id="hud-bot-z">0</span></div>
+                            </div>
+                        </div>
+
+
+
+                        <div class="bot-actions">
+                            <button id="btn-bot-reconnect" class="btn btn-secondary">Connect Spectator Bot</button>
+                            <button id="btn-bot-unspectate" class="btn btn-danger">Stop Spectating</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+
+
+
+            <!-- Command Generator View -->
+            <section id="tab-cmdgen" class="tab-content">
+                <header class="page-header">
+                    <h1>Minecraft Command Generator</h1>
+                    <button id="btn-run-generated-cmd" class="btn btn-primary">Execute on Server</button>
+                </header>
+
+                <div class="cmdgen-container">
+                    <div class="cmdgen-sidebar">
+                        <button class="cmd-type-btn active" data-cmd="give">/give (Items & NBT)</button>
+                        <button class="cmd-type-btn" data-cmd="tp">/tp (Teleport)</button>
+                        <button class="cmd-type-btn" data-cmd="gamemode">/gamemode</button>
+                        <button class="cmd-type-btn" data-cmd="effect">/effect (Buffs/Debuffs)</button>
+                        <button class="cmd-type-btn" data-cmd="summon">/summon (Entities/Mobs)</button>
+                        <button class="cmd-type-btn" data-cmd="weather">/weather & /time</button>
+                    </div>
+
+                    <div class="cmdgen-main">
+                        <!-- /give form -->
+                        <div class="cmd-form active" id="form-give">
+                            <h3>Give Item Generator</h3>
+                            <div class="form-group">
+                                <label>Target Player:</label>
+                                <input type="text" id="give-target" value="@p" placeholder="@p, @a, or player name" />
+                            </div>
+                            <div class="form-group">
+                                <label>Item ID:</label>
+                                <input type="text" id="give-item" value="diamond_sword" placeholder="diamond_sword, netherite_chestplate, apple" />
+                            </div>
+                            <div class="form-group">
+                                <label>Count:</label>
+                                <input type="number" id="give-count" value="1" min="1" max="64" />
+                            </div>
+                            <div class="form-group">
+                                <label>Custom Name (JSON / Text):</label>
+                                <input type="text" id="give-name" placeholder="Excalibur" />
+                            </div>
+                            <div class="form-group">
+                                <label>Enchantments (e.g. sharpness:5, unbreaking:3):</label>
+                                <input type="text" id="give-ench" placeholder="sharpness:5, fire_aspect:2" />
+                            </div>
+                        </div>
+
+                        <!-- /tp form -->
+                        <div class="cmd-form" id="form-tp">
+                            <h3>Teleport Generator</h3>
+                            <div class="form-group">
+                                <label>Target Player:</label>
+                                <input type="text" id="tp-target" value="@p" />
+                            </div>
+                            <div class="form-group">
+                                <label>Destination (X Y Z or Player):</label>
+                                <input type="text" id="tp-dest" value="0 100 0" placeholder="X Y Z or target player" />
+                            </div>
+                        </div>
+
+                        <!-- /gamemode form -->
+                        <div class="cmd-form" id="form-gamemode">
+                            <h3>Gamemode Generator</h3>
+                            <div class="form-group">
+                                <label>Mode:</label>
+                                <select id="gm-mode">
+                                    <option value="creative">Creative</option>
+                                    <option value="survival">Survival</option>
+                                    <option value="adventure">Adventure</option>
+                                    <option value="spectator">Spectator</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Target Player:</label>
+                                <input type="text" id="gm-target" value="@p" />
+                            </div>
+                        </div>
+
+                        <!-- /effect form -->
+                        <div class="cmd-form" id="form-effect">
+                            <h3>Effect Generator</h3>
+                            <div class="form-group">
+                                <label>Target Player:</label>
+                                <input type="text" id="eff-target" value="@p" />
+                            </div>
+                            <div class="form-group">
+                                <label>Effect Name:</label>
+                                <input type="text" id="eff-name" value="speed" placeholder="speed, strength, regeneration, night_vision" />
+                            </div>
+                            <div class="form-group">
+                                <label>Duration (Seconds):</label>
+                                <input type="number" id="eff-duration" value="60" />
+                            </div>
+                            <div class="form-group">
+                                <label>Amplifier (0-255):</label>
+                                <input type="number" id="eff-amp" value="1" />
+                            </div>
+                        </div>
+
+                        <!-- /summon form -->
+                        <div class="cmd-form" id="form-summon">
+                            <h3>Summon Entity Generator</h3>
+                            <div class="form-group">
+                                <label>Entity ID:</label>
+                                <input type="text" id="sum-entity" value="zombie" placeholder="zombie, skeleton, iron_golem, ender_dragon" />
+                            </div>
+                            <div class="form-group">
+                                <label>Spawn Coordinates (X Y Z):</label>
+                                <input type="text" id="sum-pos" value="~ ~ ~" placeholder="~ ~ ~ or exact X Y Z" />
+                            </div>
+                        </div>
+
+                        <!-- /weather form -->
+                        <div class="cmd-form" id="form-weather">
+                            <h3>Weather & Time Generator</h3>
+                            <div class="form-group">
+                                <label>Action:</label>
+                                <select id="wt-type">
+                                    <option value="weather clear">Weather: Clear</option>
+                                    <option value="weather rain">Weather: Rain</option>
+                                    <option value="weather thunder">Weather: Thunder</option>
+                                    <option value="time set day">Time: Day (1000)</option>
+                                    <option value="time set night">Time: Night (13000)</option>
+                                    <option value="time set noon">Time: Noon (6000)</option>
+                                    <option value="time set midnight">Time: Midnight (18000)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Output Command Box -->
+                        <div class="cmd-output-box">
+                            <label>Generated Command:</label>
+                            <div class="output-row">
+                                <input type="text" id="generated-cmd-input" readonly />
+                                <button id="btn-copy-cmd" class="btn btn-secondary btn-sm">Copy</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+
+            <!-- Settings View -->
+            <section id="tab-settings" class="tab-content">
+                <header class="page-header">
+                    <h1>Server Settings</h1>
+                    <button id="btn-save-settings" class="btn btn-success">Save Settings</button>
+                </header>
+                <div id="settings-alert" class="alert hidden"></div>
+                <form id="settings-form" class="settings-grid">
+                </form>
+            </section>
+
+            <!-- Mods Manager View -->
+            <section id="tab-mods" class="tab-content">
+                <header class="page-header">
+                    <div>
+                        <h1>Mods Manager</h1>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">Install, inspect, enable/disable, and remove Fabric mods (.jar)</p>
+                    </div>
+                    <div class="actions">
+                        <button id="btn-refresh-mods" class="btn btn-secondary btn-sm">Refresh</button>
+                        <label for="mod-file-input" class="btn btn-primary btn-sm" style="cursor: pointer; margin: 0; display: inline-flex; align-items: center; gap: 6px;">
+                            <span>+ Upload .jar</span>
+                            <input type="file" id="mod-file-input" accept=".jar" multiple style="display: none;" />
+                        </label>
+                    </div>
+                </header>
+
+                <div id="mod-alert" class="alert hidden" style="margin-bottom: 1.5rem;"></div>
+
+                <!-- Drag and drop zone -->
+                <div class="mod-dropzone" id="mod-dropzone">
+                    <div class="dropzone-icon">📦</div>
+                    <div class="dropzone-text">
+                        <strong>Drag & Drop Fabric mod (.jar) files here</strong>
+                        <span>or click the "+ Upload .jar" button above</span>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 1.5rem;">
+                    <div class="card-header page-header" style="padding: 1rem 1.5rem; margin-bottom: 0; border-bottom: 1px solid var(--border);">
+                        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 1rem;">
+                            <h3 style="margin: 0;">Installed Mods (<span id="mod-count">0</span>)</h3>
+                            <input type="text" id="mod-search" placeholder="Search mods..." style="padding: 0.5rem 0.8rem; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 4px; color: var(--text-main); font-size: 0.85rem; max-width: 250px;" />
+                        </div>
+                    </div>
+                    <div class="mods-list-container" id="mods-list">
+                        <!-- Dynamic mod items rendered here -->
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>

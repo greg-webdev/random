@@ -1,0 +1,12 @@
+<Application x:Class="KeyRecorder.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <!-- Application global font and smooth rendering -->
+        <ResourceDictionary>
+            <FontFamily x:Key="MainFont">Segoe UI, -apple-system, BlinkMacSystemFont, Roboto, sans-serif</FontFamily>
+            <FontFamily x:Key="MonoFont">Consolas, Cascadia Code, JetBrains Mono, Courier New, monospace</FontFamily>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

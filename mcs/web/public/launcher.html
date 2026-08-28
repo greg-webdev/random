@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Server Launcher & Installer</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+    <style>
+        :root {
+            --bg-dark: #000000;
+            --bg-card: #111111;
+            --text-main: #ffffff;
+            --text-muted: #888888;
+            --border: #ffffff22;
+            --accent: #ffffff;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body {
+            background: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        .launcher-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            width: 100%;
+            max-width: 540px;
+            padding: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            box-shadow: 0 10px 30px #000000aa;
+        }
+        .header {
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1rem;
+        }
+        .header h1 {
+            font-size: 1.3rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+        .header p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.4rem;
+        }
+        .status-box {
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 1.25rem;
+            font-size: 0.9rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+        }
+        .status-label { color: var(--text-muted); }
+        .status-val { font-weight: 600; }
+        .log-box {
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 1rem;
+            font-family: monospace;
+            font-size: 0.8rem;
+            height: 120px;
+            overflow-y: auto;
+            color: var(--text-muted);
+        }
+        .actions {
+            display: flex;
+            gap: 1rem;
+        }
+        .btn {
+            flex: 1;
+            padding: 0.9rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: var(--bg-dark);
+            color: var(--text-main);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn:hover {
+            border-color: #ffffff;
+            background: #ffffff11;
+        }
+        .btn-primary {
+            background: #ffffff;
+            color: #000000;
+            border-color: #ffffff;
+        }
+        .btn-primary:hover {
+            background: #cccccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="launcher-card">
+        <div class="header">
+            <h1>MINECRAFT SERVER LAUNCHER</h1>
+            <p>MC 1.21.11 Fabric Server & Web Control Panel</p>
+        </div>
+
+        <div class="status-box">
+            <div class="status-row">
+                <span class="status-label">Target Directory:</span>
+                <span class="status-val" id="target-path">Documents/mcserver</span>
+            </div>
+            <div class="status-row">
+                <span class="status-label">Installation Status:</span>
+                <span class="status-val" id="install-status">Checking...</span>
+            </div>
+            <div class="status-row">
+                <span class="status-label">Mods Directory:</span>
+                <span class="status-val" style="color: #4a7c29;">Separated (/mcserver/mods)</span>
+            </div>
+        </div>
+
+        <div class="log-box" id="log-box">
+            [System] Initializing Launcher Setup UI...
+        </div>
+
+        <div class="actions" id="action-buttons">
+            <button class="btn btn-primary" id="btn-launch">Launch Server</button>
+            <button class="btn" id="btn-reinstall">Re-Install Server</button>
+        </div>
+    </div>
+
+    <script>
+        async function checkStatus() {
+            try {
+                const res = await fetch('/api/launcher-status');
+                const data = await res.json();
+
+                document.getElementById('target-path').textContent = data.targetDir;
+                document.getElementById('install-status').textContent = data.exists ? 'Installed / Ready' : 'Not Installed';
+                
+                const logBox = document.getElementById('log-box');
+                if (data.exists) {
+                    logBox.textContent = `[Info] Minecraft Server detected at ${data.targetDir}\nClick "LAUNCH SERVER" to start control panel.`;
+                } else {
+                    logBox.textContent = `[Info] Server not found in Documents.\nClick "RE-INSTALL SERVER" to unpack clean server.`;
+                }
+            } catch (e) {}
+        }
+
+        document.getElementById('btn-launch').addEventListener('click', async () => {
+            document.getElementById('log-box').textContent += '\n[Action] Launching Minecraft Server Control Panel...';
+            const res = await fetch('/api/launch', { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('log-box').textContent += '\n[Success] Server running! Redirecting to http://localhost:3000...';
+                setTimeout(() => { window.location.href = 'http://localhost:3000'; }, 1500);
+            }
+        });
+
+        document.getElementById('btn-reinstall').addEventListener('click', async () => {
+            document.getElementById('log-box').textContent += '\n[Action] Unpacking clean server files to Documents/mcserver...';
+            const res = await fetch('/api/reinstall', { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('log-box').textContent += '\n[Success] Unpacked! Launching control panel...';
+                setTimeout(() => { window.location.href = 'http://localhost:3000'; }, 1500);
+            }
+        });
+
+        checkStatus();
+    </script>
+</body>
+</html>

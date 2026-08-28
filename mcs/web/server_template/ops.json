@@ -1,0 +1,20 @@
+[
+  {
+    "uuid": "a8485277-6d9c-3029-ba15-bb3dba9424f4",
+    "name": "geg",
+    "level": 4,
+    "bypassesPlayerLimit": false
+  },
+  {
+    "uuid": "fcd64fac-8bac-3e85-8cbc-49b980489c97",
+    "name": "WebSpectatorBot",
+    "level": 4,
+    "bypassesPlayerLimit": false
+  },
+  {
+    "uuid": "110399d2-8ed6-3c97-9212-71420f215728",
+    "name": "webspectatorbot",
+    "level": 4,
+    "bypassesPlayerLimit": false
+  }
+]

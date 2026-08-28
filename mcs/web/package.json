@@ -1,0 +1,35 @@
+{
+  "name": "mcs-web-control",
+  "version": "1.0.0",
+  "description": "Minecraft Fabric Server Web UI Control Panel",
+  "main": "unpacker.js",
+  "bin": "unpacker.js",
+  "scripts": {
+    "start": "node unpacker.js",
+    "build": "pkg . --targets node18-win-x64 --output ../MinecraftServerControlPanel.exe"
+  },
+  "pkg": {
+    "assets": [
+      "public/**/*",
+      "server_template/**/*",
+      "node_modules/prismarine-viewer/**/*"
+    ],
+    "targets": [
+      "node18-win-x64"
+    ]
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "express-http-proxy": "^2.1.2",
+    "fs-extra": "^11.4.0",
+    "mineflayer": "^4.37.1",
+    "prismarine-nbt": "^2.8.0",
+    "prismarine-provider-anvil": "^2.13.0",
+    "prismarine-viewer": "^1.33.0",
+    "socket.io": "^4.7.5"
+  },
+  "devDependencies": {
+    "nodedown": "^0.1.2",
+    "pkg": "^5.8.1"
+  }
+}

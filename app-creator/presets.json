@@ -1,0 +1,141 @@
+[
+  {
+    "id": "sys-diag",
+    "title": "System & Network Suite",
+    "description": "Essential diagnostic tools, network monitoring, and port checkers",
+    "icon": "activity",
+    "buttons": [
+      {
+        "id": "ping-tool",
+        "name": "Network Ping Test",
+        "type": "cmd",
+        "command": "ping {{host}} -n {{count}}",
+        "description": "Pings a target domain or IP address",
+        "color": "#3b82f6",
+        "icon": "wifi",
+        "inputs": [
+          { "id": "host", "label": "Target Host / IP", "type": "text", "default": "google.com" },
+          { "id": "count", "label": "Ping Count", "type": "number", "default": "4" }
+        ]
+      },
+      {
+        "id": "port-check",
+        "name": "Check Active Port",
+        "type": "powershell",
+        "command": "Get-NetTCPConnection -LocalPort {{port}} -ErrorAction SilentlyContinue | Select-Object LocalAddress, LocalPort, OwningProcess, State | Format-Table -AutoSize",
+        "description": "Checks if a port is currently listening or occupied",
+        "color": "#10b981",
+        "icon": "shield",
+        "inputs": [
+          { "id": "port", "label": "Port Number", "type": "number", "default": "8080" }
+        ]
+      },
+      {
+        "id": "sys-info",
+        "name": "System Info & Uptime",
+        "type": "powershell",
+        "command": "$os = Get-CimInstance Win32_OperatingSystem; [PSCustomObject]@{ Computer = $env:COMPUTERNAME; OS = $os.Caption; Version = $os.Version; RAM_GB = [math]::Round($os.TotalVisibleMemorySize/1MB, 2); LastBoot = $os.LastBootUpTime } | Format-List",
+        "description": "Inspect OS version, RAM capacity, and last boot time",
+        "color": "#8b5cf6",
+        "icon": "cpu",
+        "inputs": []
+      },
+      {
+        "id": "clean-temp",
+        "name": "Clean Temp Files",
+        "type": "powershell",
+        "command": "$temp = $env:TEMP; Write-Host \"Checking temp folder: $temp\"; Get-ChildItem $temp -Recurse -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum | ForEach-Object { Write-Host (\"Total temp size: {0:N2} MB\" -f ($_.Sum / 1MB)) }",
+        "description": "Scans and reports Windows temporary files size",
+        "color": "#ec4899",
+        "icon": "trash",
+        "inputs": []
+      }
+    ]
+  },
+  {
+    "id": "dev-suite",
+    "title": "Developer Workspace",
+    "description": "Code execution, local HTTP server, git status, and npm tools",
+    "icon": "code",
+    "buttons": [
+      {
+        "id": "http-server",
+        "name": "Launch Static Server",
+        "type": "cmd",
+        "command": "npx -y serve . -p {{port}}",
+        "description": "Starts an instant HTTP server in current folder",
+        "color": "#f59e0b",
+        "icon": "globe",
+        "inputs": [
+          { "id": "port", "label": "Server Port", "type": "number", "default": "3000" }
+        ]
+      },
+      {
+        "id": "node-eval",
+        "name": "Execute Node.js Code",
+        "type": "node",
+        "command": "const fs = require('fs');\nconsole.log('=== Node.js Script Execution ===');\nconsole.log('Current Time:', new Date().toISOString());\nconsole.log('Platform:', process.platform, process.arch);\nconsole.log('User Message:', `{{msg}}`);\n\nconst fib = n => n <= 1 ? n : fib(n-1) + fib(n-2);\nconsole.log('Fibonacci(12):', fib(12));\n",
+        "description": "Run custom Javascript code logic inside Node runtime",
+        "color": "#6366f1",
+        "icon": "terminal",
+        "inputs": [
+          { "id": "msg", "label": "Custom Message Input", "type": "text", "default": "Hello from AppCraft Node script!" }
+        ]
+      },
+      {
+        "id": "git-status",
+        "name": "Git Status & Branch",
+        "type": "cmd",
+        "command": "git status -s && echo --- Branches --- && git branch",
+        "description": "Quick view of current git repository changes and active branch",
+        "color": "#06b6d4",
+        "icon": "git-branch",
+        "inputs": []
+      },
+      {
+        "id": "npm-search",
+        "name": "NPM Package Info",
+        "type": "cmd",
+        "command": "npm info {{pkg}} description version repository.url",
+        "description": "Fetches NPM registry data for any package",
+        "color": "#ef4444",
+        "icon": "box",
+        "inputs": [
+          { "id": "pkg", "label": "Package Name", "type": "text", "default": "express" }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "fun-automation",
+    "title": "Scripting & Speech Studio",
+    "description": "PowerShell speech synthesis, file directory analysis, and custom executable macros",
+    "icon": "zap",
+    "buttons": [
+      {
+        "id": "speech-synth",
+        "name": "Text-To-Speech Voice",
+        "type": "powershell",
+        "command": "Add-Type -AssemblyName System.Speech; $synth = New-Object System.Speech.Synthesis.SpeechSynthesizer; Write-Host \"Speaking: {{speech_text}}\"; $synth.Speak('{{speech_text}}')",
+        "description": "Uses Windows SAPI speech synthesizer to talk aloud",
+        "color": "#14b8a6",
+        "icon": "volume-2",
+        "inputs": [
+          { "id": "speech_text", "label": "Text to Speak", "type": "text", "default": "AppCraft Studio is online and ready for your commands!" }
+        ]
+      },
+      {
+        "id": "dir-stats",
+        "name": "Folder File Inspector",
+        "type": "powershell",
+        "command": "$path = '{{target_dir}}'; if(Test-Path $path){ $items = Get-ChildItem -Path $path; $files = $items | Where-Object {!$_.PSIsContainer}; $dirs = $items | Where-Object {$_.PSIsContainer}; Write-Host \"Directory: $path\"; Write-Host \"Subfolders: ($($dirs.Count))\"; Write-Host \"Files: ($($files.Count))\"; $files | Select-Object Name, Length, LastWriteTime | Format-Table -AutoSize } else { Write-Host \"Path not found: $path\" }",
+        "description": "Analyzes folder structure, file counts, and sizes",
+        "color": "#a855f7",
+        "icon": "folder",
+        "inputs": [
+          { "id": "target_dir", "label": "Target Path", "type": "text", "default": "C:\\Users" }
+        ]
+      }
+    ]
+  }
+]

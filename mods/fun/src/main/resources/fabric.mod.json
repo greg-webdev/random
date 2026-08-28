@@ -1,0 +1,40 @@
+{
+	"schemaVersion": 1,
+	"id": "funstuff",
+	"version": "${version}",
+	"name": "Fun Stuff",
+	"description": "Adds wacky, delightful, and fun items, blocks, and gadgets to Minecraft 1.21.11!",
+	"authors": [
+		"Antigravity"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/funstuff/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.example.funstuff.FunStuffMod"
+		],
+		"client": [
+			"com.example.funstuff.client.FunStuffModClient"
+		],
+		"modmenu": [
+			"com.example.funstuff.client.FunStuffModMenuCompat"
+		]
+	},
+	"mixins": [
+		"funstuff.mixins.json",
+		{
+			"config": "funstuff.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.19.3",
+		"minecraft": "~1.21.11",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}

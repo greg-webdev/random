@@ -1,0 +1,12 @@
+{
+  "scripts": [
+    "server.js",
+    "mca_parser.js",
+    "spectator_bot.js",
+    "headless_bot.js"
+  ],
+  "assets": [
+    "public/**/*",
+    "server_template/**/*"
+  ]
+}
