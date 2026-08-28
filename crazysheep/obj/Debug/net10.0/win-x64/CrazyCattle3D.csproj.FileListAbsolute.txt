@@ -203,3 +203,4 @@ C:\Users\geg\Documents\random\crazysheep\obj\Debug\net10.0\win-x64\refint\CrazyC
 C:\Users\geg\Documents\random\crazysheep\obj\Debug\net10.0\win-x64\CrazyCattle3D.pdb
 C:\Users\geg\Documents\random\crazysheep\obj\Debug\net10.0\win-x64\CrazyCattle3D.genruntimeconfig.cache
 C:\Users\geg\Documents\random\crazysheep\obj\Debug\net10.0\win-x64\ref\CrazyCattle3D.dll
+C:\Users\geg\Documents\random\crazysheep\obj\Debug\net10.0\win-x64\CrazyCattle3D.sourcelink.json

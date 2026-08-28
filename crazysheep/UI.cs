@@ -349,12 +349,26 @@ namespace CrazyCattle3D
 
             string startPrompt = "► PRESS SPACE OR ENTER TO PLAY ◄";
             int spW = Raylib.MeasureText(startPrompt, 18);
-            Raylib.DrawText(startPrompt, (ScreenWidth - spW) / 2, 545, 18, promptCol);
+            Raylib.DrawText(startPrompt, (ScreenWidth - spW) / 2, 537, 18, promptCol);
+
+            // Multiplayer button
+            float mpPulse = (MathF.Sin(s_menuTime * 3.5f + 1.5f) + 1.0f) * 0.5f;
+            Color mpCol = new Color(
+                (byte)(120 + (int)(60 * mpPulse)),
+                (byte)(80  + (int)(40 * mpPulse)),
+                (byte)(230 + (int)(25 * mpPulse)),
+                (byte)255
+            );
+            string mpPrompt = "🐑  [M]  MULTIPLAYER LOBBY  [M]  🐑";
+            int mpW = Raylib.MeasureText(mpPrompt, 15);
+            Raylib.DrawRectangle((ScreenWidth - mpW) / 2 - 10, 563, mpW + 20, 24,
+                new Color(30, 20, 60, 180));
+            Raylib.DrawText(mpPrompt, (ScreenWidth - mpW) / 2, 568, 15, mpCol);
 
             // Footer note
             string foot = "Original concept by anna (@4nn4t4t)";
             int fw = Raylib.MeasureText(foot, 11);
-            Raylib.DrawText(foot, (ScreenWidth - fw) / 2, 615, 11, Color.DarkGray);
+            Raylib.DrawText(foot, (ScreenWidth - fw) / 2, 610, 11, Color.DarkGray);
         }
 
         public static void DrawVictoryScreen(int kills, float matchTime)

@@ -1,6 +1,7 @@
 using System;
 using System.Numerics;
 using Raylib_cs;
+using System.Collections.Generic;
 
 namespace CrazyCattle3D
 {
@@ -11,6 +12,16 @@ namespace CrazyCattle3D
         public bool IsPlayer { get; }
         public bool IsAlive { get; set; } = true;
 
+        // ── Multiplayer role ─────────────────────────────────────────────────
+        /// <summary>Local = this machine's player, Remote = network player, Bot = AI.</summary>
+        public SheepRole NetRole { get; set; } = SheepRole.Bot;
+        public float LatencyMs { get; set; }
+
+        /// <summary>Pending input fed by NetworkManager for remote players (host side).</summary>
+        public InputPacket PendingInput;
+        public bool        HasPendingInput;
+
+        // ── Physics state ────────────────────────────────────────────────────
         public Vector3 Position;
         public Vector3 Velocity;
         public float Yaw;   // radians
@@ -50,6 +61,11 @@ namespace CrazyCattle3D
         private float _aiSteer;
         private float _aiBaaCooldown;
         private Sheep? _aiTarget;
+
+        // Interpolation targets for network smoothing (client-side)
+        private Vector3 _netTargetPos;
+        private float   _netTargetYaw;
+        private float   _netLerpAlpha; // 0 = not interpolating
 
         public Sheep(int id, string name, bool isPlayer, Vector3 startPos, float startYaw)
         {
@@ -124,9 +140,42 @@ namespace CrazyCattle3D
             bool wantDash = false;
             bool wantJump = false;
 
-            if (IsPlayer)
+            if (NetRole == SheepRole.Local)
             {
                 GetPlayerInputs(out throttle, out steer, out wantDash, out wantJump);
+            }
+            else if (NetRole == SheepRole.Remote)
+            {
+                // Host side: drive this sheep from the client's last received input
+                if (HasPendingInput)
+                {
+                    throttle  = PendingInput.Throttle;
+                    steer     = PendingInput.Steer;
+                    wantDash  = PendingInput.WantDash;
+                    wantJump  = PendingInput.WantJump;
+                    if (PendingInput.WantBaa)   TriggerBaa();
+                    if (PendingInput.ToggleHeavy)
+                    {
+                        IsSuperHeavy = !IsSuperHeavy;
+                        TriggerBaa(IsSuperHeavy ? "SUPER HEAVY!" : "NORMAL");
+                    }
+                    HasPendingInput = false;
+                }
+                else
+                {
+                    // Coast on last inputs
+                    throttle = PendingInput.Throttle * 0.5f;
+                    steer    = PendingInput.Steer;
+                }
+
+                // Client side: smooth interpolation toward authoritative position
+                if (_netLerpAlpha > 0f)
+                {
+                    float t = Math.Min(1f, _netLerpAlpha + dt * 8f);
+                    Position = Vector3.Lerp(Position, _netTargetPos, t);
+                    Yaw      = LerpAngle(Yaw, _netTargetYaw, t);
+                    _netLerpAlpha = t >= 1f ? 0f : t;
+                }
             }
             else
             {
@@ -481,6 +530,49 @@ namespace CrazyCattle3D
         {
             // If tipped and on the ground for more than 0.45s, BOOM!
             return IsTipped && TippedTimer > 0.45f;
+        }
+
+        // ── Network state sync ────────────────────────────────────────────────
+
+        /// <summary>
+        /// Called on clients to apply an authoritative state snapshot from the host.
+        /// Snaps dead/alive changes immediately; lerps position smoothly.
+        /// </summary>
+        public void ApplyNetState(SheepNetState s)
+        {
+            // Alive/dead is authoritative — apply immediately
+            IsAlive = s.IsAlive;
+            if (!IsAlive) return;
+
+            IsSuperHeavy = s.IsSuperHeavy;
+            IsDashing    = s.IsDashing;
+            DashEnergy   = s.DashEnergy;
+            Kills        = s.Kills;
+
+            // For position/rotation: set lerp target so we smoothly interpolate
+            _netTargetPos = new Vector3(s.PosX, s.PosY, s.PosZ);
+            _netTargetYaw = s.Yaw;
+            _netLerpAlpha = 0.01f; // kick off interpolation
+
+            // Velocity is applied directly (used for physics prediction on next frame)
+            Velocity      = new System.Numerics.Vector3(s.VelX, s.VelY, s.VelZ);
+            Pitch         = s.Pitch;
+            Roll          = s.Roll;
+            RollVelocity  = s.RollVel;
+            PitchVelocity = s.PitchVel;
+            YawVelocity   = s.YawVel;
+
+            // Tipping
+            if (s.IsTipped && !IsTipped) { IsTipped = true; TippedTimer = 0f; }
+            else if (!s.IsTipped)        { IsTipped = false; TippedTimer = 0f; }
+        }
+
+        private static float LerpAngle(float a, float b, float t)
+        {
+            float diff = b - a;
+            while (diff >  MathF.PI) diff -= MathF.PI * 2f;
+            while (diff < -MathF.PI) diff += MathF.PI * 2f;
+            return a + diff * Math.Clamp(t, 0f, 1f);
         }
 
         private static float NormalizeAngle(float angle)

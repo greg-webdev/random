@@ -1,0 +1,219 @@
+[15:48:07] [main/INFO]: Loading Minecraft 1.21.11 with Fabric Loader 0.19.4
+[15:48:08] [main/INFO]: Loading 4 mods:
+	- fabricloader 0.19.4
+	   \-- mixinextras 0.5.4
+	- java 25
+	- minecraft 1.21.11
+[15:48:08] [main/INFO]: SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/geg/Documents/random/mc/libraries/net/fabricmc/sponge-mixin/0.17.4+mixin.0.8.7/sponge-mixin-0.17.4+mixin.0.8.7.jar Service=Knot/Fabric Env=CLIENT
+[15:48:10] [Datafixer Bootstrap/INFO]: 287 Datafixer optimizations took 733 milliseconds
+[15:50:10] [main/WARN]: COM exception querying Win32_Processor, which might not be on your system. Will not attempt to query it again. Error was -2147217389: Failed to enumerate results.
+[15:52:10] [main/WARN]: COM exception querying Win32_Processor, which might not be on your system. Will not attempt to query it again. Error was -2147217389: Failed to enumerate results.
+[15:54:10] [main/WARN]: COM exception querying Win32_PhysicalMemory, which might not be on your system. Will not attempt to query it again. Error was -2147217389: Failed to enumerate results.
+[15:54:14] [main/INFO]: Completely ignored arguments: [--userType, mojang]
+[15:54:14] [Render thread/INFO]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[15:54:14] [Render thread/INFO]: Setting user: TestPlayer
+[15:54:14] [Render thread/INFO]: [STDERR]: [LWJGL] [ThreadLocalUtil] Unsupported JNI version detected, this may result in a crash. Please inform LWJGL developers.
+[15:54:14] [Render thread/INFO]: Backend library: LWJGL version 3.3.3-snapshot
+[15:54:15] [Download-2/ERROR]: Failed to fetch user properties
+com.mojang.authlib.exceptions.InvalidCredentialsException: Status: 401
+	at knot//com.mojang.authlib.exceptions.MinecraftClientHttpException.toAuthenticationException(MinecraftClientHttpException.java:59)
+	at knot//com.mojang.authlib.yggdrasil.YggdrasilUserApiService.fetchProperties(YggdrasilUserApiService.java:150)
+	at knot//net.minecraft.class_310.method_55608(class_310.java:457)
+	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1789)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: com.mojang.authlib.exceptions.MinecraftClientHttpException: Status: 401
+	at knot//com.mojang.authlib.minecraft.client.MinecraftClient.readInputStream(MinecraftClient.java:103)
+	at knot//com.mojang.authlib.minecraft.client.MinecraftClient.get(MinecraftClient.java:56)
+	at knot//com.mojang.authlib.yggdrasil.YggdrasilUserApiService.fetchProperties(YggdrasilUserApiService.java:121)
+	... 5 more
+[15:54:15] [Render thread/ERROR]: Couldn't set icon
+java.nio.file.NoSuchFileException: C:\Users\geg\Documents\random\mc\assets\objects\5f\5ff04807c356f1beed0b86ccf659b44b9983e3fa
+	at java.base/sun.nio.fs.WindowsException.translateToIOException(WindowsException.java:85)
+	at java.base/sun.nio.fs.WindowsException.rethrowAsIOException(WindowsException.java:103)
+	at java.base/sun.nio.fs.WindowsException.rethrowAsIOException(WindowsException.java:108)
+	at java.base/sun.nio.fs.WindowsFileSystemProvider.newByteChannel(WindowsFileSystemProvider.java:231)
+	at java.base/java.nio.file.Files.newByteChannel(Files.java:357)
+	at knot//net.minecraft.class_7669.newByteChannel(class_7669.java:69)
+	at java.base/java.nio.file.Files.newByteChannel(Files.java:357)
+	at java.base/java.nio.file.Files.newByteChannel(Files.java:399)
+	at java.base/java.nio.file.spi.FileSystemProvider.newInputStream(FileSystemProvider.java:371)
+	at java.base/java.nio.file.Files.newInputStream(Files.java:154)
+	at knot//net.minecraft.class_7367.method_45301(class_7367.java:13)
+	at knot//net.minecraft.class_1041.method_4491(class_1041.java:178)
+	at knot//net.minecraft.class_310.<init>(class_310.java:522)
+	at knot//net.minecraft.client.main.Main.main(Main.java:234)
+	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:517)
+	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:72)
+	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23)
+[15:56:15] [Render thread/WARN]: COM exception querying Win32_Processor, which might not be on your system. Will not attempt to query it again. Error was -2147217389: Failed to enumerate results.
+[15:58:15] [Render thread/WARN]: COM exception querying Win32_Processor, which might not be on your system. Will not attempt to query it again. Error was -2147217389: Failed to enumerate results.
+[15:58:15] [Render thread/INFO]: Using optional rendering extensions: GL_ARB_buffer_storage, GL_KHR_debug, GL_ARB_vertex_attrib_binding, GL_ARB_direct_state_access, GL_EXT_texture_filter_anisotropic
+[15:58:15] [Render thread/ERROR]: Failed to open pack C:\Users\geg\Documents\random\mc\assets\objects\5b\5b822601569264742c5a1a00baf808acc4e83a0c
+java.nio.file.NoSuchFileException: C:\Users\geg\Documents\random\mc\assets\objects\5b\5b822601569264742c5a1a00baf808acc4e83a0c
+	at java.base/sun.nio.fs.WindowsException.translateToIOException(WindowsException.java:85)
+	at java.base/sun.nio.fs.WindowsException.rethrowAsIOException(WindowsException.java:103)
+	at java.base/sun.nio.fs.WindowsException.rethrowAsIOException(WindowsException.java:108)
+	at java.base/sun.nio.fs.WindowsFileAttributeViews$Basic.readAttributes(WindowsFileAttributeViews.java:52)
+	at java.base/sun.nio.fs.WindowsFileAttributeViews$Basic.readAttributes(WindowsFileAttributeViews.java:38)
+	at java.base/sun.nio.fs.WindowsFileSystemProvider.readAttributes(WindowsFileSystemProvider.java:195)
+	at java.base/java.nio.file.Files.readAttributes(Files.java:1702)
+	at java.base/java.util.zip.ZipFile$Source.get(ZipFile.java:1493)
+	at java.base/java.util.zip.ZipFile$CleanableResource.<init>(ZipFile.java:704)
+	at java.base/java.util.zip.ZipFile.<init>(ZipFile.java:204)
+	at java.base/java.util.zip.ZipFile.<init>(ZipFile.java:150)
+	at java.base/java.util.zip.ZipFile.<init>(ZipFile.java:164)
+	at knot//net.minecraft.class_3258$class_8616.method_52426(class_3258.java:168)
+	at knot//net.minecraft.class_3258.method_14391(class_3258.java:59)
+	at knot//net.minecraft.class_3258.method_14410(class_3258.java:42)
+	at knot//net.minecraft.class_3255.method_14407(class_3255.java:28)
+	at knot//net.minecraft.class_3288.method_45274(class_3288.java:53)
+	at knot//net.minecraft.class_3288.method_45275(class_3288.java:40)
+	at knot//net.minecraft.class_1065.method_45260(class_1065.java:121)
+	at knot//net.minecraft.class_7678.method_45258(class_7678.java:82)
+	at knot//net.minecraft.class_7678.method_45266(class_7678.java:67)
+	at java.base/java.util.HashMap.forEach(HashMap.java:1430)
+	at knot//net.minecraft.class_7678.method_45267(class_7678.java:66)
+	at knot//net.minecraft.class_7678.method_14453(class_7678.java:50)
+	at knot//net.minecraft.class_3283.method_29212(class_3283.java:43)
+	at knot//net.minecraft.class_3283.method_14445(class_3283.java:36)
+	at knot//net.minecraft.class_310.<init>(class_310.java:545)
+	at knot//net.minecraft.client.main.Main.main(Main.java:234)
+	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:517)
+	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:72)
+	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23)
+[15:58:15] [Render thread/WARN]: Missing metadata in pack high_contrast
+[15:58:15] [Render thread/ERROR]: Failed to open pack C:\Users\geg\Documents\random\mc\assets\objects\24\24e1b0a4692ff3379226ae300009cf124b992b79
+java.nio.file.NoSuchFileException: C:\Users\geg\Documents\random\mc\assets\objects\24\24e1b0a4692ff3379226ae300009cf124b992b79
+	at java.base/sun.nio.fs.WindowsException.translateToIOException(WindowsException.java:85)
+	at java.base/sun.nio.fs.WindowsException.rethrowAsIOException(WindowsException.java:103)
+	at java.base/sun.nio.fs.WindowsException.rethrowAsIOException(WindowsException.java:108)
+	at java.base/sun.nio.fs.WindowsFileAttributeViews$Basic.readAttributes(WindowsFileAttributeViews.java:52)
+	at java.base/sun.nio.fs.WindowsFileAttributeViews$Basic.readAttributes(WindowsFileAttributeViews.java:38)
+	at java.base/sun.nio.fs.WindowsFileSystemProvider.readAttributes(WindowsFileSystemProvider.java:195)
+	at java.base/java.nio.file.Files.readAttributes(Files.java:1702)
+	at java.base/java.util.zip.ZipFile$Source.get(ZipFile.java:1493)
+	at java.base/java.util.zip.ZipFile$CleanableResource.<init>(ZipFile.java:704)
+	at java.base/java.util.zip.ZipFile.<init>(ZipFile.java:204)
+	at java.base/java.util.zip.ZipFile.<init>(ZipFile.java:150)
+	at java.base/java.util.zip.ZipFile.<init>(ZipFile.java:164)
+	at knot//net.minecraft.class_3258$class_8616.method_52426(class_3258.java:168)
+	at knot//net.minecraft.class_3258.method_14391(class_3258.java:59)
+	at knot//net.minecraft.class_3258.method_14410(class_3258.java:42)
+	at knot//net.minecraft.class_3255.method_14407(class_3255.java:28)
+	at knot//net.minecraft.class_3288.method_45274(class_3288.java:53)
+	at knot//net.minecraft.class_3288.method_45275(class_3288.java:40)
+	at knot//net.minecraft.class_1065.method_45260(class_1065.java:121)
+	at knot//net.minecraft.class_7678.method_45258(class_7678.java:82)
+	at knot//net.minecraft.class_7678.method_45266(class_7678.java:67)
+	at java.base/java.util.HashMap.forEach(HashMap.java:1430)
+	at knot//net.minecraft.class_7678.method_45267(class_7678.java:66)
+	at knot//net.minecraft.class_7678.method_14453(class_7678.java:50)
+	at knot//net.minecraft.class_3283.method_29212(class_3283.java:43)
+	at knot//net.minecraft.class_3283.method_14445(class_3283.java:36)
+	at knot//net.minecraft.class_310.<init>(class_310.java:545)
+	at knot//net.minecraft.client.main.Main.main(Main.java:234)
+	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:517)
+	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:72)
+	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23)
+[15:58:15] [Render thread/WARN]: Missing metadata in pack programmer_art
+[15:58:15] [Render thread/INFO]: Reloading ResourceManager: vanilla
+[15:58:16] [Render thread/ERROR]: Unreported exception thrown!
+java.util.concurrent.CompletionException: java.io.UncheckedIOException: java.nio.file.NoSuchFileException: C:\Users\geg\Documents\random\mc\assets\objects\15\15e3d77a4555455d752fde55b2661c159bee59ba
+	at java.base/java.util.concurrent.CompletableFuture.wrapInCompletionException(CompletableFuture.java:323)
+	at java.base/java.util.concurrent.CompletableFuture.encodeThrowable(CompletableFuture.java:359)
+	at java.base/java.util.concurrent.CompletableFuture.completeThrowable(CompletableFuture.java:364)
+	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1791)
+	at knot//net.minecraft.class_4014.method_67576(class_4014.java:51)
+	at java.base/java.util.concurrent.ForkJoinTask$RunnableExecuteAction.compute(ForkJoinTask.java:1750)
+	at java.base/java.util.concurrent.ForkJoinTask$RunnableExecuteAction.compute(ForkJoinTask.java:1742)
+	at java.base/java.util.concurrent.ForkJoinTask$InterruptibleTask.exec(ForkJoinTask.java:1659)
+	at java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:511)
+	at java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1450)
+	at java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:2019)
+	at java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:187)
+Caused by: java.io.UncheckedIOException: java.nio.file.NoSuchFileException: C:\Users\geg\Documents\random\mc\assets\objects\15\15e3d77a4555455d752fde55b2661c159bee59ba
+	at knot//net.minecraft.class_1060.method_65881(class_1060.java:186)
+	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1789)
+	... 8 more
+Caused by: java.nio.file.NoSuchFileException: C:\Users\geg\Documents\random\mc\assets\objects\15\15e3d77a4555455d752fde55b2661c159bee59ba
+	at java.base/sun.nio.fs.WindowsException.translateToIOException(WindowsException.java:85)
+	at java.base/sun.nio.fs.WindowsException.rethrowAsIOException(WindowsException.java:103)
+	at java.base/sun.nio.fs.WindowsException.rethrowAsIOException(WindowsException.java:108)
+	at java.base/sun.nio.fs.WindowsFileSystemProvider.newByteChannel(WindowsFileSystemProvider.java:231)
+	at java.base/java.nio.file.Files.newByteChannel(Files.java:357)
+	at knot//net.minecraft.class_7669.newByteChannel(class_7669.java:69)
+	at java.base/java.nio.file.Files.newByteChannel(Files.java:357)
+	at java.base/java.nio.file.Files.newByteChannel(Files.java:399)
+	at java.base/java.nio.file.spi.FileSystemProvider.newInputStream(FileSystemProvider.java:371)
+	at java.base/java.nio.file.Files.newInputStream(Files.java:154)
+	at knot//net.minecraft.class_7367.method_45301(class_7367.java:13)
+	at knot//net.minecraft.class_3298.method_14482(class_3298.java:47)
+	at knot//net.minecraft.class_10539.method_65871(class_10539.java:22)
+	at knot//net.minecraft.class_11405.method_65809(class_11405.java:25)
+	at knot//net.minecraft.class_1060.method_65877(class_1060.java:172)
+	at knot//net.minecraft.class_1060.method_65881(class_1060.java:184)
+	... 9 more
+[15:58:16] [Worker-Main-3/WARN]: Unable to load font 'minecraft:include/unifont_pua' in fonts.json in resourcepack: 'vanilla'
+java.nio.file.NoSuchFileException: C:\Users\geg\Documents\random\mc\assets\objects\db\db5582c177aca966ba1a9b062cead233a262a939
+	at java.base/sun.nio.fs.WindowsException.translateToIOException(WindowsException.java:85)
+	at java.base/sun.nio.fs.WindowsException.rethrowAsIOException(WindowsException.java:103)
+	at java.base/sun.nio.fs.WindowsException.rethrowAsIOException(WindowsException.java:108)
+	at java.base/sun.nio.fs.WindowsFileSystemProvider.newByteChannel(WindowsFileSystemProvider.java:231)
+	at java.base/java.nio.file.Files.newByteChannel(Files.java:357)
+	at knot//net.minecraft.class_7669.newByteChannel(class_7669.java:69)
+	at java.base/java.nio.file.Files.newByteChannel(Files.java:357)
+	at java.base/java.nio.file.Files.newByteChannel(Files.java:399)
+	at java.base/java.nio.file.spi.FileSystemProvider.newInputStream(FileSystemProvider.java:371)
+	at java.base/java.nio.file.Files.newInputStream(Files.java:154)
+	at knot//net.minecraft.class_7367.method_45301(class_7367.java:13)
+	at knot//net.minecraft.class_3298.method_14482(class_3298.java:47)
+	at knot//net.minecraft.class_3298.method_43039(class_3298.java:51)
+	at knot//net.minecraft.class_378.method_51619(class_378.java:318)
+	at knot//net.minecraft.class_378.method_51623(class_378.java:184)
+	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1789)
+	at knot//net.minecraft.class_4014.method_67576(class_4014.java:51)
+	at java.base/java.util.concurrent.ForkJoinTask$RunnableExecuteAction.compute(ForkJoinTask.java:1750)
+	at java.base/java.util.concurrent.ForkJoinTask$RunnableExecuteAction.compute(ForkJoinTask.java:1742)
+	at java.base/java.util.concurrent.ForkJoinTask$InterruptibleTask.exec(ForkJoinTask.java:1659)
+	at java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:511)
+	at java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1450)
+	at java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:2019)
+	at java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:187)
+[15:58:16] [Worker-Main-12/WARN]: Unable to load font 'minecraft:include/unifont' in fonts.json in resourcepack: 'vanilla'
+java.nio.file.NoSuchFileException: C:\Users\geg\Documents\random\mc\assets\objects\40\402ded0eebd448033ef415e861a17513075f80e7
+	at java.base/sun.nio.fs.WindowsException.translateToIOException(WindowsException.java:85)
+	at java.base/sun.nio.fs.WindowsException.rethrowAsIOException(WindowsException.java:103)
+	at java.base/sun.nio.fs.WindowsException.rethrowAsIOException(WindowsException.java:108)
+	at java.base/sun.nio.fs.WindowsFileSystemProvider.newByteChannel(WindowsFileSystemProvider.java:231)
+	at java.base/java.nio.file.Files.newByteChannel(Files.java:357)
+	at knot//net.minecraft.class_7669.newByteChannel(class_7669.java:69)
+	at java.base/java.nio.file.Files.newByteChannel(Files.java:357)
+	at java.base/java.nio.file.Files.newByteChannel(Files.java:399)
+	at java.base/java.nio.file.spi.FileSystemProvider.newInputStream(FileSystemProvider.java:371)
+	at java.base/java.nio.file.Files.newInputStream(Files.java:154)
+	at knot//net.minecraft.class_7367.method_45301(class_7367.java:13)
+	at knot//net.minecraft.class_3298.method_14482(class_3298.java:47)
+	at knot//net.minecraft.class_3298.method_43039(class_3298.java:51)
+	at knot//net.minecraft.class_378.method_51619(class_378.java:318)
+	at knot//net.minecraft.class_378.method_51623(class_378.java:184)
+	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1789)
+	at knot//net.minecraft.class_4014.method_67576(class_4014.java:51)
+	at java.base/java.util.concurrent.ForkJoinTask$RunnableExecuteAction.compute(ForkJoinTask.java:1750)
+	at java.base/java.util.concurrent.ForkJoinTask$RunnableExecuteAction.compute(ForkJoinTask.java:1742)
+	at java.base/java.util.concurrent.ForkJoinTask$InterruptibleTask.exec(ForkJoinTask.java:1659)
+	at java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:511)
+	at java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1450)
+	at java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:2019)
+	at java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:187)
+[15:58:16] [Download-3/INFO]: Could not authorize you against Realms server: java.lang.RuntimeException: Failed to parse into SignedJWT: 0
+[15:58:16] [Download-3/ERROR]: Failed to fetch Realms feature flags
+net.minecraft.class_4355: Realms authentication error with message 'java.lang.RuntimeException: Failed to parse into SignedJWT: 0'
+	at knot//net.minecraft.class_4341.method_20998(class_4341.java:526)
+	at knot//net.minecraft.class_4341.method_68466(class_4341.java:186)
+	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1789)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+[16:00:16] [Render thread/WARN]: COM exception querying Win32_Processor, which might not be on your system. Will not attempt to query it again. Error was -2147217389: Failed to enumerate results.

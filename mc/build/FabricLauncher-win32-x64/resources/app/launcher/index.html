@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fabric 1.21.11 Isolated Launcher</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">FABRIC 1.21.11</span>
+          <span class="brand-sub">ISOLATED INSTANCE</span>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <button class="nav-item active" data-tab="dashboard">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          <span>Dashboard</span>
+        </button>
+        <button class="nav-item" data-tab="mods">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+          </svg>
+          <span>Local Mods</span>
+          <span class="badge" id="mod-count-badge">0</span>
+        </button>
+        <button class="nav-item" data-tab="roaming">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span>.minecraft Sync</span>
+        </button>
+        <button class="nav-item" data-tab="console">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="4 17 10 11 4 5"></polyline>
+            <line x1="12" y1="19" x2="20" y2="19"></line>
+          </svg>
+          <span>Console Logs</span>
+        </button>
+        <button class="nav-item" data-tab="settings">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+          <span>Settings</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="status-indicator">
+          <div class="status-dot" id="connection-dot"></div>
+          <span id="connection-text">Connected</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Dashboard View -->
+      <section class="tab-view active" id="tab-dashboard">
+        <div class="dashboard-grid">
+          <!-- Play Card -->
+          <div class="card play-card">
+            <div class="card-header">
+              <h2>LAUNCH CONTROLS</h2>
+              <span class="badge" id="instance-status-label">READY</span>
+            </div>
+
+            <div class="form-group">
+              <label for="input-username">Player Name</label>
+              <input type="text" id="input-username" class="input-control" value="Player" placeholder="Enter username">
+            </div>
+
+            <div class="form-group">
+              <div class="label-with-val">
+                <label for="input-ram">Max RAM Allocation</label>
+                <span class="val-display" id="ram-val-display">4 GB</span>
+              </div>
+              <input type="range" id="input-ram" min="2" max="16" step="1" value="4" class="slider-control">
+            </div>
+
+            <div class="launch-status-box" id="launch-status-box">
+              <div class="status-spinner" id="launch-spinner" style="display: none;"></div>
+              <span id="launch-status-text">Click Play to start Fabric 1.21.11</span>
+            </div>
+
+            <div class="action-buttons">
+              <button class="btn btn-primary btn-launch" id="btn-launch">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+                <span>PLAY FABRIC 1.21.11</span>
+              </button>
+              <button class="btn btn-danger btn-kill" id="btn-kill" style="display: none;">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="6" y="6" width="12" height="12"></rect>
+                </svg>
+                <span>STOP GAME</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick Stats / Folder Links Card -->
+          <div class="card quick-info-card">
+            <div class="card-header">
+              <h2>INSTANCE DETAILS</h2>
+            </div>
+            
+            <div class="quick-links">
+              <button class="btn btn-secondary" id="btn-open-mods">
+                <span>Open ./mods Folder</span>
+              </button>
+              
+              <button class="btn btn-secondary" id="btn-open-instance">
+                <span>Open ./instance Folder</span>
+              </button>
+            </div>
+
+            <div class="info-list">
+              <div class="info-item">
+                <span class="info-label">Target Version:</span>
+                <span class="info-val">Fabric 1.21.11</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Local Mods:</span>
+                <span class="info-val" id="info-mod-count">0 mods</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Java Path:</span>
+                <span class="info-val truncate" id="info-java-path">Detecting...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Mods Manager View -->
+      <section class="tab-view" id="tab-mods">
+        <div class="view-header">
+          <div>
+            <h1>LOCAL MODS MANAGER</h1>
+            <p>Manage 1.21.11 Fabric mods inside <code>./mods</code>.</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-secondary" id="btn-open-mods-2">Open Folder</button>
+          </div>
+        </div>
+
+        <div class="upload-dropzone" id="dropzone">
+          <input type="file" id="mod-file-input" multiple accept=".jar,.disabled" style="display: none;">
+          <div class="dropzone-content">
+            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <h3>Drag & Drop .jar Mods Here</h3>
+            <p>or <button class="link-btn" id="btn-browse-mods">browse files</button></p>
+          </div>
+        </div>
+
+        <div class="mods-grid" id="mods-grid">
+          <!-- Mod cards injected via app.js -->
+        </div>
+      </section>
+
+      <!-- Roaming .minecraft Sync View -->
+      <section class="tab-view" id="tab-roaming">
+        <div class="view-header">
+          <div>
+            <h1>SYSTEM .MINECRAFT SYNC</h1>
+            <p>Copy items from <code>C:\Users\geg\AppData\Roaming\.minecraft</code> into this instance.</p>
+          </div>
+        </div>
+
+        <div class="roaming-sections">
+          <div class="card">
+            <div class="card-header">
+              <h2>OPTIONS & SETTINGS</h2>
+            </div>
+            <p class="card-desc">Import standard options.txt into this instance.</p>
+            <button class="btn btn-primary" id="btn-sync-options">
+              <span>Copy options.txt</span>
+            </button>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h2>WORLDS (SAVES)</h2>
+            </div>
+            <div class="roaming-list" id="saves-list"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h2>RESOURCE PACKS</h2>
+            </div>
+            <div class="roaming-list" id="rp-list"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h2>SHADER PACKS</h2>
+            </div>
+            <div class="roaming-list" id="sp-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Console Logs View -->
+      <section class="tab-view" id="tab-console">
+        <div class="view-header">
+          <div>
+            <h1>CONSOLE LOGS</h1>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-secondary" id="btn-clear-console">Clear</button>
+          </div>
+        </div>
+
+        <div class="console-wrapper">
+          <div class="console-terminal" id="console-terminal">
+            <div class="log-line sys">[System] Console log ready.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Settings View -->
+      <section class="tab-view" id="tab-settings">
+        <div class="view-header">
+          <div>
+            <h1>SETTINGS</h1>
+          </div>
+        </div>
+
+        <div class="card settings-card">
+          <div class="form-group">
+            <label for="setting-java-path">Java Executable Path</label>
+            <input type="text" id="setting-java-path" class="input-control" placeholder="Leave empty for auto-detection (Java 21+)">
+          </div>
+
+          <div class="form-group">
+            <label for="setting-jvm-args">Custom JVM Arguments</label>
+            <input type="text" id="setting-jvm-args" class="input-control" placeholder="-XX:+UseG1GC">
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Launch Zoom Overlay -->
+  <div id="launch-overlay" class="launch-overlay">
+    <div class="launch-overlay-bg"></div>
+    <div class="launch-overlay-content">
+      <h1 class="anim-launch-text">LAUNCH<span class="i-box"><span class="dot-target">•</span><span class="i-stem">I</span></span>NG</h1>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

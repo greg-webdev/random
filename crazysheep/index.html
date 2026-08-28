@@ -21,6 +21,7 @@
     <div id="hud-overlay">
       <div class="hud-top-left">
         <div class="alive-badge" id="alive-count">ALIVE: 40 / 40</div>
+        <div class="network-badge" id="network-badge" style="display: none; margin-top: 4px; border-color: rgba(56, 189, 248, 0.6); color: var(--secondary-accent);">ONLINE</div>
         <div class="hud-watermark">CrazyCattle3D - Edited by Gregory</div>
       </div>
 
@@ -50,7 +51,8 @@
           <button class="arrow-btn" id="next-map-btn">▶</button>
         </div>
 
-        <button class="action-btn" id="start-game-btn">▶ START MATCH (40 SHEEP)</button>
+        <button class="action-btn" id="start-game-btn">▶ START SOLO (40 SHEEP)</button>
+        <button class="action-btn mp-btn" id="open-lobby-btn" style="margin-top: 8px; background: rgba(139, 92, 246, 0.2); border-color: #8b5cf6; color: #d8b4fe;">🐑 [M] MULTIPLAYER LOBBY [M] 🐑</button>
         <div style="font-size: 11px; color: var(--text-muted);">Drive downhill, ram opponents, survive!</div>
       </div>
 
@@ -62,6 +64,30 @@
           <canvas id="fidget-canvas" width="70" height="70"></canvas>
           <div class="fidget-label" id="fidget-label">SPINNER</div>
         </div>
+      </div>
+    </div>
+
+    <!-- Multiplayer Lobby Screen -->
+    <div id="lobby-screen" class="screen-overlay" style="display: none;">
+      <div class="title-container">
+        <div class="main-title" style="font-size: 40px; color: #a78bfa;">MULTIPLAYER LOBBY</div>
+      </div>
+
+      <div class="menu-card" style="width: 380px;">
+        <div style="text-align: left; margin-bottom: 15px;">
+          <label style="font-size: 12px; color: var(--secondary-accent); font-weight: 700;">PLAYER NAME:</label>
+          <input type="text" id="mp-name-input" class="lobby-input" value="Gregory" maxlength="12">
+        </div>
+        
+        <div style="text-align: left; margin-bottom: 25px;">
+          <label style="font-size: 12px; color: var(--secondary-accent); font-weight: 700;">SERVER URL:</label>
+          <input type="text" id="mp-url-input" class="lobby-input" value="ws://localhost:8080">
+        </div>
+
+        <button class="action-btn mp-btn" id="join-server-btn" style="background: rgba(139, 92, 246, 0.4); border-color: #a78bfa; color: white;">▶ CONNECT & PLAY</button>
+        <button class="cheat-btn" id="lobby-back-btn" style="margin-top: 15px;">◀ BACK TO MENU</button>
+        
+        <div id="lobby-status" style="margin-top: 15px; font-size: 12px; color: #facc15;">Ready to connect...</div>
       </div>
     </div>
 

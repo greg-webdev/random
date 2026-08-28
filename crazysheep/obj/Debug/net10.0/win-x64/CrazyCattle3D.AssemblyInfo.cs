@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CrazyCattle3D")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+785ec776e874129821440703ee9cc3e37744b09e")]
 [assembly: System.Reflection.AssemblyProductAttribute("CrazyCattle3D")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CrazyCattle3D")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

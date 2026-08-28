@@ -115,6 +115,18 @@ canvas {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
 }
 
+.network-badge {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(56, 189, 248, 0.6);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--secondary-accent);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 0 5px rgba(56, 189, 248, 0.5);
+}
+
 .hud-watermark {
   font-size: 10px;
   font-weight: 700;
@@ -243,6 +255,32 @@ canvas {
 @keyframes pulseCredit {
   0%, 100% { transform: scale(1); opacity: 0.95; }
   50% { transform: scale(1.05); opacity: 1; text-shadow: 0 0 18px rgba(250, 204, 21, 0.9); }
+}
+
+/* Lobby Inputs */
+.lobby-input {
+  width: 100%;
+  background: rgba(15, 23, 42, 0.8);
+  border: 2px solid rgba(139, 92, 246, 0.5);
+  color: #fff;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 5px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.lobby-input:focus {
+  border-color: #a78bfa;
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+}
+
+.mp-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px rgba(167, 139, 250, 0.5);
 }
 
 /* Card Menu */

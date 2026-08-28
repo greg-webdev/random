@@ -1,0 +1,12 @@
+/time set midnight
+/time set 6000
+/summon minecraft:slime 238.87 -60.00 99.99 {Size:20}
+/tick freeze
+/tp ~ ~100 ~
+/tick unfreeze
+/tp ~ ~100 ~
+/time set da
+/time set day
+/gamerule advance_time false
+/time set day
+/summon cow

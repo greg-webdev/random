@@ -8,6 +8,7 @@ namespace CrazyCattle3D
     public enum GameState
     {
         MainMenu,
+        Lobby,
         Playing,
         GameOver,
         Victory
@@ -34,6 +35,13 @@ namespace CrazyCattle3D
         private static Sheep s_player = null!;
         private static float s_matchTime;
         private static int s_bestRank = 999;
+
+        // ── Multiplayer ──────────────────────────────────────────────────
+        private static NetworkManager s_net    = new NetworkManager();
+        private static LobbyManager   s_lobby  = new LobbyManager();
+        // Broadcast state every 50ms (20 Hz)
+        private const  float NetBroadcastInterval = 0.05f;
+        private static float s_netBroadcastTimer  = 0f;
 
         public static void Main(string[] args)
         {
@@ -63,10 +71,16 @@ namespace CrazyCattle3D
 
             // Cleanup
             AudioEngine.Shutdown();
+            s_net.Dispose();
             Raylib.CloseWindow();
         }
 
         private static void InitializeMatch()
+        {
+            InitializeMatch(seed: 0);
+        }
+
+        private static void InitializeMatch(int seed)
         {
             s_terrain = new Terrain(s_currentMap);
             s_sheep = new Sheep[TotalSheepCount];
@@ -74,31 +88,62 @@ namespace CrazyCattle3D
             s_matchTime = 0.0f;
             s_stateTimer = 0.0f;
 
-            Random rnd = new Random();
+            // Use a shared seed for deterministic obstacle/spawn placement in MP
+            Random rnd = seed != 0 ? new Random(seed) : new Random();
 
-            // 1. Create Player at index 0 (center-ish spawn)
-            float playerYaw = 0.0f;
-            Vector3 playerPos = new Vector3(0, s_terrain.GetHeight(0, -15.0f) + 1.0f, -15.0f);
-            s_player = new Sheep(0, "You", true, playerPos, playerYaw);
-            s_sheep[0] = s_player;
+            // Figure out how many human players we have
+            int humanCount = s_net.Role == NetRole.None ? 1 : s_net.Peers.Count + 1;
 
-            // 2. Create Bot Sheep (scattered across the arena)
-            for (int i = 1; i < TotalSheepCount; i++)
+            // 1. Create sheep for human players (slots 0..humanCount-1)
+            for (int h = 0; h < humanCount; h++)
+            {
+                float angle  = h * (MathF.PI * 2f / humanCount);
+                float dist   = 12.0f;
+                float px     = MathF.Cos(angle) * dist;
+                float pz     = MathF.Sin(angle) * dist;
+                float py     = s_terrain.GetHeight(px, pz) + 1.0f;
+                float yaw    = MathF.Atan2(-px, -pz);
+
+                string pName = h == 0 ? (s_net.LocalName is { Length: > 0 } n ? n : "You")
+                                      : s_net.GetSlotName(h);
+                if (string.IsNullOrEmpty(pName)) pName = $"Player {h + 1}";
+
+                var sheep = new Sheep(h, pName, h == s_net.LocalSlot || s_net.Role == NetRole.None,
+                                     new Vector3(px, py, pz), yaw);
+
+                // Assign net role
+                if (s_net.Role == NetRole.None)
+                    sheep.NetRole = SheepRole.Local;      // solo play
+                else if (h == s_net.LocalSlot)
+                    sheep.NetRole = SheepRole.Local;      // this machine's player
+                else
+                    sheep.NetRole = SheepRole.Remote;     // network player
+
+                s_sheep[h] = sheep;
+
+                if (h == s_net.LocalSlot || s_net.Role == NetRole.None)
+                    s_player = sheep;
+            }
+
+            // 2. Create Bot Sheep for remaining slots (scattered across the arena)
+            for (int i = humanCount; i < TotalSheepCount; i++)
             {
                 float angle = (float)rnd.NextDouble() * MathF.PI * 2.0f;
-                float dist = 8.0f + (float)rnd.NextDouble() * (s_terrain.ArenaRadius * 0.72f);
-                float x = MathF.Cos(angle) * dist;
-                float z = MathF.Sin(angle) * dist;
-                float y = s_terrain.GetHeight(x, z) + 1.0f;
-                float yaw = (float)rnd.NextDouble() * MathF.PI * 2.0f;
+                float dist  = 8.0f + (float)rnd.NextDouble() * (s_terrain.ArenaRadius * 0.72f);
+                float x     = MathF.Cos(angle) * dist;
+                float z     = MathF.Sin(angle) * dist;
+                float y     = s_terrain.GetHeight(x, z) + 1.0f;
+                float yaw2  = (float)rnd.NextDouble() * MathF.PI * 2.0f;
 
                 string botName = $"Sheep #{i}";
-                s_sheep[i] = new Sheep(i, botName, false, new Vector3(x, y, z), yaw);
+                var bot = new Sheep(i, botName, false, new Vector3(x, y, z), yaw2);
+                bot.NetRole = SheepRole.Bot;
+                s_sheep[i] = bot;
             }
 
             // Position initial camera
             s_renderer.Camera.Position = s_player.Position - new Vector3(0, -3.5f, 6.5f);
-            s_renderer.Camera.Target = s_player.Position;
+            s_renderer.Camera.Target   = s_player.Position;
         }
 
         private static void Update(float dt)
@@ -151,6 +196,10 @@ namespace CrazyCattle3D
                     UpdateMainMenu(dt);
                     break;
 
+                case GameState.Lobby:
+                    UpdateLobby(dt);
+                    break;
+
                 case GameState.Playing:
                     UpdatePlaying(dt);
                     break;
@@ -181,12 +230,22 @@ namespace CrazyCattle3D
                 AudioEngine.PlayCrash(0.4f);
             }
 
-            // Start game
+            // Start solo game
             if (Raylib.IsKeyPressed(KeyboardKey.Space) || Raylib.IsKeyPressed(KeyboardKey.Enter))
             {
+                s_net = new NetworkManager(); // solo: no networking
                 InitializeMatch();
                 s_state = GameState.Playing;
                 AudioEngine.PlayBaa(1.1f);
+            }
+
+            // Open multiplayer lobby
+            if (Raylib.IsKeyPressed(KeyboardKey.M))
+            {
+                s_net = new NetworkManager();
+                s_lobby.Reset();
+                s_state = GameState.Lobby;
+                AudioEngine.PlayCrash(0.5f);
             }
 
             // Slowly orbit camera around center
@@ -195,9 +254,88 @@ namespace CrazyCattle3D
             s_renderer.Camera.Target = new Vector3(0, 4.0f, 0);
         }
 
+        private static void UpdateLobby(float dt)
+        {
+            s_net.Tick(dt);
+            s_lobby.Update(dt, s_net);
+
+            // Handle incoming packets on the host side (player joins, etc.)
+            if (s_net.Role == NetRole.Host)
+            {
+                // Packets for join events are handled inside NetworkManager/LobbyManager;
+                // We just check for the lobby PlayerList updates here.
+                foreach (var pkt in s_net.PollPackets())
+                {
+                    if (pkt.Type == NetPacketType.PlayerList)
+                        s_net.ParsePlayerList(pkt.Data, 1);
+                }
+            }
+
+            // Host chose to start
+            if (s_lobby.ReadyToStart && s_net.Role == NetRole.Host)
+            {
+                int seed = (int)(Raylib.GetTime() * 1000.0);
+                s_net.HostStartMatch(seed);
+                InitializeMatch(seed);
+                s_state = GameState.Playing;
+                AudioEngine.PlayBaa(1.1f);
+                return;
+            }
+
+            // Client received a MatchStart
+            if (s_lobby.MatchReceived && s_net.Role == NetRole.Client)
+            {
+                InitializeMatch(s_lobby.MatchSeed);
+                s_state = GameState.Playing;
+                AudioEngine.PlayBaa(1.1f);
+                return;
+            }
+
+            if (Raylib.IsKeyPressed(KeyboardKey.Escape))
+            {
+                s_net.Dispose();
+                s_net = new NetworkManager();
+                s_lobby.Reset();
+                s_state = GameState.MainMenu;
+            }
+        }
+
         private static void UpdatePlaying(float dt)
         {
             s_matchTime += dt;
+
+            // ── Client: poll network state and send local input ──────────────────
+            if (s_net.Role == NetRole.Client)
+            {
+                // Send our local input to host BEFORE we process physics
+                SendLocalInput();
+
+                // Apply any state snapshots we've received
+                foreach (var pkt in s_net.PollPackets())
+                {
+                    if (pkt.Type == NetPacketType.StateSnapshot)
+                        s_net.ApplySnapshot(pkt, s_sheep);
+                    else if (pkt.Type == NetPacketType.PlayerLeave)
+                        HandlePlayerLeave(pkt);
+                }
+            }
+
+            // ── Host: feed client inputs into their sheep ────────────────────
+            if (s_net.Role == NetRole.Host)
+            {
+                foreach (var peer in s_net.Peers)
+                {
+                    if (s_net.TryGetPeerInput(peer.SlotIndex, out InputPacket inp))
+                    {
+                        int slot = peer.SlotIndex;
+                        if (slot < s_sheep.Length && s_sheep[slot] != null)
+                        {
+                            s_sheep[slot].PendingInput    = inp;
+                            s_sheep[slot].HasPendingInput  = true;
+                        }
+                    }
+                }
+            }
 
             // 1. Update all sheep
             for (int i = 0; i < s_sheep.Length; i++)
@@ -205,11 +343,25 @@ namespace CrazyCattle3D
                 s_sheep[i].Update(dt, s_terrain, s_sheep);
             }
 
-            // 2. Resolve Collisions
-            ResolveCollisions(dt);
+            // 2. Resolve Collisions (host-authoritative; clients do visual-only via snapshots)
+            // Run collision on both host and solo; clients skip to avoid desyncs
+            if (s_net.Role != NetRole.Client)
+            {
+                ResolveCollisions(dt);
+                CheckExplosions();
+            }
 
-            // 3. Check for Tipping / Fence / Boundary Explosions
-            CheckExplosions();
+            // 3. Broadcast state (host only, 20 Hz)
+            if (s_net.Role == NetRole.Host)
+            {
+                s_netBroadcastTimer -= dt;
+                if (s_netBroadcastTimer <= 0f)
+                {
+                    s_netBroadcastTimer = NetBroadcastInterval;
+                    s_net.BroadcastState(s_sheep);
+                }
+                s_net.Tick(dt);
+            }
 
             // 4. Update particles and camera
             s_renderer.UpdateParticlesAndCamera(dt, s_player, s_terrain);
@@ -229,6 +381,43 @@ namespace CrazyCattle3D
                 s_bestRank = 1;
                 s_state = GameState.Victory;
                 AudioEngine.PlayWin();
+            }
+        }
+
+        // Send the local player's keyboard input as a net packet to the host
+        private static void SendLocalInput()
+        {
+            if (s_player == null || !s_player.IsAlive) return;
+
+            float throttle = 0f, steer = 0f;
+            byte  buttons  = 0;
+
+            if (Raylib.IsKeyDown(KeyboardKey.W) || Raylib.IsKeyDown(KeyboardKey.Up))    throttle += 1.0f;
+            if (Raylib.IsKeyDown(KeyboardKey.S) || Raylib.IsKeyDown(KeyboardKey.Down))  throttle -= 0.6f;
+            if (Raylib.IsKeyDown(KeyboardKey.A) || Raylib.IsKeyDown(KeyboardKey.Left))  steer    -= 1.0f;
+            if (Raylib.IsKeyDown(KeyboardKey.D) || Raylib.IsKeyDown(KeyboardKey.Right)) steer    += 1.0f;
+
+            Vector2 mouseDelta = Raylib.GetMouseDelta();
+            if (MathF.Abs(mouseDelta.X) > 0.5f)
+                steer += Math.Clamp(mouseDelta.X * 0.08f, -1.0f, 1.0f);
+
+            if (Raylib.IsKeyDown(KeyboardKey.LeftShift) || Raylib.IsKeyDown(KeyboardKey.RightShift)) buttons |= 0x01;
+            if (Raylib.IsKeyPressed(KeyboardKey.Space))  buttons |= 0x02;
+            if (Raylib.IsKeyPressed(KeyboardKey.E))      buttons |= 0x04;
+            if (Raylib.IsKeyPressed(KeyboardKey.F2))     buttons |= 0x08;
+
+            var inp = new InputPacket { Throttle = throttle, Steer = steer, Buttons = buttons };
+            s_net.SendInput(inp);
+        }
+
+        private static void HandlePlayerLeave(RawPacket pkt)
+        {
+            if (pkt.Data.Length < 2) return;
+            int slot = pkt.Data[1];
+            if (slot < s_sheep.Length && s_sheep[slot] != null)
+            {
+                s_sheep[slot].NetRole = SheepRole.Bot; // fall back to AI
+                UI.AddKillMessage($"{s_sheep[slot].Name} disconnected!", false);
             }
         }
 
@@ -467,25 +656,33 @@ namespace CrazyCattle3D
             Raylib.BeginDrawing();
             Raylib.ClearBackground(s_terrain.SkyColor);
 
-            // Render 3D Scene
-            s_renderer.RenderScene(s_terrain, s_sheep, s_player);
-
-            // Render 2D Overlays & HUD
             switch (s_state)
             {
+                case GameState.Lobby:
+                    // Lobby has its own full-screen draw
+                    s_lobby.Draw(s_net);
+                    Raylib.EndDrawing();
+                    return;
+
                 case GameState.MainMenu:
+                    // Render 3D Scene for menu background
+                    s_renderer.RenderScene(s_terrain, s_sheep, s_player);
                     UI.DrawMainMenu(s_currentMap, s_bestRank < 999 ? s_bestRank : 0);
                     break;
 
                 case GameState.Playing:
+                    s_renderer.RenderScene(s_terrain, s_sheep, s_player);
                     UI.DrawHUD(s_player, s_sheep, s_terrain, GetAliveCount(), s_renderer.Camera);
+                    DrawNetworkHUD();
                     break;
 
                 case GameState.GameOver:
+                    s_renderer.RenderScene(s_terrain, s_sheep, s_player);
                     UI.DrawGameOverScreen(GetAliveCount() + 1, TotalSheepCount, s_player.Kills);
                     break;
 
                 case GameState.Victory:
+                    s_renderer.RenderScene(s_terrain, s_sheep, s_player);
                     UI.DrawVictoryScreen(s_player.Kills, s_matchTime);
                     break;
             }
@@ -500,6 +697,54 @@ namespace CrazyCattle3D
             Raylib.DrawFPS(10, ScreenHeight - 20);
 
             Raylib.EndDrawing();
+        }
+
+        /// <summary>Draws a small network status badge and player nametags in multiplayer.</summary>
+        private static void DrawNetworkHUD()
+        {
+            if (s_net.Role == NetRole.None) return;
+
+            // ─ Connection status badge (top-right) ────────────────────────────
+            string roleStr = s_net.Role == NetRole.Host ? "HOST" : "CLIENT";
+            float  latency = s_net.Role == NetRole.Client ? s_net.LatencyMs : 0f;
+            Color  latCol  = latency < 60 ? Color.Green : latency < 150 ? Color.Yellow : Color.Red;
+            string latStr  = s_net.Role == NetRole.Client ? $"{(int)latency}ms" : $"{s_net.Peers.Count}P";
+
+            Raylib.DrawRectangle(ScreenWidth - 90, 4, 86, 22, new Color(0, 0, 0, 140));
+            Raylib.DrawText(roleStr, ScreenWidth - 86, 8, 13, new Color(180, 180, 255, 255));
+            Raylib.DrawText(latStr,  ScreenWidth - 50, 8, 13, latCol);
+
+            // ─ Floating player name tags (world-space projected) ───────────────
+            int humanCount = s_net.Peers.Count + 1;
+            for (int i = 0; i < humanCount && i < s_sheep.Length; i++)
+            {
+                Sheep sh = s_sheep[i];
+                if (!sh.IsAlive || sh.NetRole == SheepRole.Local) continue;
+
+                // Project 3D world position above head to screen
+                Vector3 worldPos = sh.Position + new Vector3(0, 2.8f, 0);
+                Vector2 screen   = Raylib.GetWorldToScreen(worldPos, s_renderer.Camera);
+
+                if (screen.X < 0 || screen.X > ScreenWidth || screen.Y < 0 || screen.Y > ScreenHeight)
+                    continue;
+
+                string tag = sh.Name;
+                int tw  = Raylib.MeasureText(tag, 13);
+                int tx  = (int)screen.X - tw / 2;
+                int ty  = (int)screen.Y - 10;
+
+                Raylib.DrawRectangle(tx - 4, ty - 2, tw + 8, 18, new Color(0, 0, 0, 130));
+                Raylib.DrawText(tag, tx, ty, 13, new Color(255, 230, 100, 255));
+
+                // Ping badge for host
+                if (s_net.Role == NetRole.Host)
+                {
+                    float peerLat = s_net.GetPeerLatency(i);
+                    Color pCol = peerLat < 60 ? Color.Green : peerLat < 150 ? Color.Yellow : Color.Red;
+                    string ps  = $"{(int)peerLat}ms";
+                    Raylib.DrawText(ps, tx, ty + 16, 11, pCol);
+                }
+            }
         }
     }
 }

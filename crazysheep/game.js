@@ -252,7 +252,7 @@ document.getElementById('next-map-btn').addEventListener('click', () => {
 });
 
 // --- 5. GAME LOGIC & CHEAT ENGINE STATE ---
-let gameState = 'MENU'; // MENU, PLAYING, END
+let gameState = 'MENU'; // MENU, LOBBY, PLAYING, END
 let timeScale = 1.0;
 let isTimeFrozen = false;
 let isFlyMode = false;
@@ -464,10 +464,27 @@ class Sheep {
     this.aiSteer = 0;
     this.aiThrottle = 1.0;
     this.aiTimer = Math.random() * 2.0;
+    this.targetPos = null;
+    this.targetYaw = null;
+    this.targetPitch = null;
+    this.targetRoll = null;
+    this.isRemote = false;
   }
 
   update(dt, input) {
     if (!this.isAlive) return;
+
+    // Remote sheep just interpolate towards target
+    if (this.isRemote && this.targetPos) {
+       this.pos.lerp(this.targetPos, Math.min(dt * 15.0, 1));
+       this.yaw += (this.targetYaw - this.yaw) * Math.min(dt * 15.0, 1);
+       this.pitch += (this.targetPitch - this.pitch) * Math.min(dt * 15.0, 1);
+       this.roll += (this.targetRoll - this.roll) * Math.min(dt * 15.0, 1);
+       
+       this.mesh.position.copy(this.pos);
+       this.mesh.rotation.set(this.pitch, this.yaw, this.roll);
+       return;
+    }
 
     let throttle = 0;
     let steer = 0;
@@ -604,6 +621,11 @@ class Sheep {
     if (!this.isAlive) return;
     this.isAlive = false;
     audio.playExplosion();
+    
+    // Broadcast explosion to other clients
+    if (this.isPlayer && ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'explosion' }));
+    }
 
     // Spawn particle puffs
     spawnWoolPuff(this.pos);
@@ -655,10 +677,13 @@ function updateParticles(dt) {
 let sheepList = [];
 let playerSheep = null;
 
-function startMatch() {
   gameState = 'PLAYING';
+  isMultiplayer = false;
+  if (ws) { ws.close(); ws = null; }
+  
   document.getElementById('menu-screen').style.display = 'none';
   document.getElementById('end-screen').style.display = 'none';
+  document.getElementById('lobby-screen').style.display = 'none';
   document.getElementById('hud-overlay').style.display = 'block';
 
   buildArena();
@@ -826,7 +851,117 @@ document.getElementById('back-menu-btn').addEventListener('click', () => {
   gameState = 'MENU';
   document.getElementById('end-screen').style.display = 'none';
   document.getElementById('menu-screen').style.display = 'flex';
+  if (ws) { ws.close(); ws = null; }
 });
+
+// --- 10.5 MULTIPLAYER LOBBY ---
+let ws = null;
+let myNetId = -1;
+let isMultiplayer = false;
+
+document.getElementById('open-lobby-btn').addEventListener('click', () => {
+  audio.playClick();
+  document.getElementById('menu-screen').style.display = 'none';
+  document.getElementById('lobby-screen').style.display = 'flex';
+});
+
+document.getElementById('lobby-back-btn').addEventListener('click', () => {
+  audio.playClick();
+  document.getElementById('lobby-screen').style.display = 'none';
+  document.getElementById('menu-screen').style.display = 'flex';
+});
+
+document.getElementById('join-server-btn').addEventListener('click', () => {
+  audio.playClick();
+  const url = document.getElementById('mp-url-input').value;
+  const name = document.getElementById('mp-name-input').value || 'Gregory';
+  const status = document.getElementById('lobby-status');
+  
+  status.innerText = 'Connecting...';
+  status.style.color = '#38bdf8';
+  
+  if (ws) ws.close();
+  ws = new WebSocket(url);
+  
+  ws.onopen = () => {
+    ws.send(JSON.stringify({ type: 'join', name }));
+  };
+  
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    if (data.type === 'init') {
+      myNetId = data.id;
+      isMultiplayer = true;
+      startMultiplayerMatch(name, data.players);
+    } else if (data.type === 'player_join') {
+      if (gameState === 'PLAYING') {
+        const bot = new Sheep(data.id, false, new THREE.Vector3(0, 10, 0), 0);
+        bot.name = data.name;
+        bot.isRemote = true;
+        sheepList.push(bot);
+        updateAliveCount();
+        addKillMessage(`${data.name} joined!`, false);
+      }
+    } else if (data.type === 'player_leave') {
+      const idx = sheepList.findIndex(s => s.id === data.id);
+      if (idx !== -1) {
+        scene.remove(sheepList[idx].mesh);
+        sheepList.splice(idx, 1);
+        updateAliveCount();
+      }
+    } else if (data.type === 'state_update') {
+      const sheep = sheepList.find(s => s.id === data.id);
+      if (sheep && sheep.isRemote) {
+        sheep.targetPos = new THREE.Vector3(data.state.x, data.state.y, data.state.z);
+        sheep.targetYaw = data.state.yaw;
+        sheep.targetPitch = data.state.pitch;
+        sheep.targetRoll = data.state.roll;
+        sheep.vel.set(data.state.vx, data.state.vy, data.state.vz);
+      }
+    } else if (data.type === 'explosion') {
+      const sheep = sheepList.find(s => s.id === data.id);
+      if (sheep) sheep.explode('exploded via network!');
+    }
+  };
+  
+  ws.onerror = () => {
+    status.innerText = 'Connection error!';
+    status.style.color = '#ef4444';
+  };
+  
+  ws.onclose = () => {
+    status.innerText = 'Disconnected.';
+    status.style.color = '#ef4444';
+    document.getElementById('network-badge').style.display = 'none';
+  };
+});
+
+function startMultiplayerMatch(myName, existingPlayers) {
+  gameState = 'PLAYING';
+  document.getElementById('lobby-screen').style.display = 'none';
+  document.getElementById('hud-overlay').style.display = 'block';
+  document.getElementById('network-badge').style.display = 'block';
+  
+  buildArena();
+  sheepList.forEach(s => scene.remove(s.mesh));
+  sheepList = [];
+  
+  const pPos = new THREE.Vector3(0, getTerrainHeight(0, 0) + 1.2, 0);
+  playerSheep = new Sheep(myNetId, true, pPos, 0);
+  playerSheep.name = myName;
+  sheepList.push(playerSheep);
+  
+  existingPlayers.forEach(p => {
+    const ppos = new THREE.Vector3(p.state.x, p.state.y, p.state.z);
+    const bot = new Sheep(p.id, false, ppos, p.state.yaw);
+    bot.name = p.name;
+    bot.isRemote = true;
+    sheepList.push(bot);
+  });
+  
+  updateAliveCount();
+  audio.playBleat(1.1);
+}
 
 // --- 11. CHEAT ENGINE MODAL & TOGGLES ---
 const cheatModal = document.getElementById('cheat-modal');
@@ -987,6 +1122,7 @@ function updateCheatButtonVisuals() {
 
 // --- 12. MAIN ANIMATION LOOP ---
 let lastTime = performance.now();
+let netTickTimer = 0;
 
 function animate(currentTime) {
   requestAnimationFrame(animate);
@@ -1001,6 +1137,21 @@ function animate(currentTime) {
   const effectiveDt = (isTimeFrozen ? 0 : rawDt) * timeScale;
 
   if (gameState === 'PLAYING') {
+    netTickTimer += rawDt;
+    if (isMultiplayer && playerSheep && playerSheep.isAlive && netTickTimer >= 1/20) {
+      netTickTimer = 0;
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'state_update',
+          state: {
+            x: playerSheep.pos.x, y: playerSheep.pos.y, z: playerSheep.pos.z,
+            vx: playerSheep.vel.x, vy: playerSheep.vel.y, vz: playerSheep.vel.z,
+            yaw: playerSheep.yaw, pitch: playerSheep.pitch, roll: playerSheep.roll
+          }
+        }));
+      }
+    }
+
     // Update all sheep
     sheepList.forEach(s => s.update(effectiveDt, input));
 
