@@ -3,9 +3,16 @@
   "version": "1.0.0",
   "description": "",
   "main": "main.js",
+  "bin": "server.js",
   "scripts": {
     "start": "electron .",
-    "build:exe": "npx electron-packager . FabricLauncher --platform=win32 --arch=x64 --overwrite --out=build --ignore=\"^/?(build|dist|instance|assets|libraries)($|/)\""
+    "build:exe": "npx electron-packager . FabricLauncher --platform=win32 --arch=x64 --overwrite --out=build --ignore=\"^/?(build|dist|instance|assets|libraries)($|/)\"",
+    "build:standalone": "npx pkg . --targets node18-win-x64 --output build/FabricLauncher_Standalone.exe"
+  },
+  "pkg": {
+    "assets": [
+      "launcher/**/*"
+    ]
   },
   "keywords": [],
   "author": "",
@@ -23,6 +30,7 @@
   },
   "devDependencies": {
     "electron": "^44.0.0",
-    "electron-packager": "^17.1.2"
+    "electron-packager": "^17.1.2",
+    "pkg": "^5.8.1"
   }
 }

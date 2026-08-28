@@ -8,3 +8,10 @@ crazysheep/Godot_v4.4-stable_win64.exe
 
 # Runtime locks
 mcs/world/session.lock
+
+*.exe
+*.jar
+*.pkg
+*.rar
+
+worker.js

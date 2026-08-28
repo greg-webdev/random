@@ -203,10 +203,18 @@ function startServer(initialPort = process.env.PORT || 3007) {
 
       server.listen(portToTry, () => {
         server.removeListener('error', onError);
+        const url = `http://localhost:${portToTry}`;
         console.log(`====================================================`);
         console.log(` Fabric 1.21.1 Minecraft Launcher Backend Ready`);
-        console.log(` Interface running at: http://localhost:${portToTry}`);
+        console.log(` Interface running at: ${url}`);
         console.log(`====================================================`);
+        
+        if (process.pkg) {
+            import('open').then(open => open.default(url)).catch(err => {
+                console.error("Could not automatically open browser:", err);
+            });
+        }
+        
         resolve(portToTry);
       });
     };
