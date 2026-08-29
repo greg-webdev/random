@@ -89,6 +89,14 @@ function switchTab(tabName) {
   elements.tabViews.forEach(view => {
     view.classList.toggle('active', view.id === `tab-${tabName}`);
   });
+
+  // Lazily load the server control panel iframe when the server tab is clicked
+  if (tabName === 'server') {
+    const iframe = document.getElementById('server-iframe');
+    if (iframe && (iframe.src === 'about:blank' || iframe.src === '')) {
+      iframe.src = 'http://localhost:3000';
+    }
+  }
 }
 
 // Event Listeners

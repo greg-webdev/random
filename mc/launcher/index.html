@@ -52,6 +52,24 @@
           </svg>
           <span>Console Logs</span>
         </button>
+        <button class="nav-item" data-tab="server">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+            <line x1="6" y1="6" x2="6.01" y2="6"></line>
+            <line x1="6" y1="18" x2="6.01" y2="18"></line>
+          </svg>
+          <span>Manage Server</span>
+        </button>
+        <button class="nav-item" data-tab="proxy">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="16 3 21 3 21 8"></polyline>
+            <line x1="4" y1="20" x2="21" y2="3"></line>
+            <polyline points="21 16 21 21 16 21"></polyline>
+            <line x1="15" y1="15" x2="21" y2="21"></line>
+          </svg>
+          <span>Eagler Proxy</span>
+        </button>
         <button class="nav-item" data-tab="settings">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="3"></circle>
@@ -237,6 +255,48 @@
           <div class="console-terminal" id="console-terminal">
             <div class="log-line sys">[System] Console log ready.</div>
           </div>
+        </div>
+      </section>
+
+      <!-- Server View -->
+      <section class="tab-view" id="tab-server" style="padding: 0; height: 100vh;">
+        <div style="width: 100%; height: 100%; overflow: hidden; background: #0b0f19;">
+          <iframe id="server-iframe" src="about:blank" style="width: 100%; height: 100%; border: none;"></iframe>
+        </div>
+      </section>
+
+      <!-- Proxy View -->
+      <section class="tab-view" id="tab-proxy">
+        <div class="view-header">
+          <div>
+            <h1>EAGLER CONGESTION PROXY</h1>
+            <p>Unified secure proxy running on WSS port 8608 bypasses local firewalls.</p>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: 1.5rem; background: #15151c; border: 1px solid #2a2a35; padding: 2rem;">
+          <h2 style="color: #ffa801; font-size: 1.4rem; margin-bottom: 1rem;">STATUS & ENDPOINTS</h2>
+          
+          <div style="margin: 1.5rem 0;">
+            <div style="display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1.5rem;">
+              <div style="width: 12px; height: 12px; border-radius: 50%; background: #4cd137; box-shadow: 0 0 10px #4cd137;"></div>
+              <span style="font-weight: bold; font-size: 1.1rem; color: #f4f4f9;">Proxy Backend is Active</span>
+            </div>
+            
+            <div style="background: #0b0f19; padding: 1.2rem; border-radius: 6px; font-family: 'Fira Code', monospace; margin: 1rem 0; border: 1px solid #1e1e28;">
+              <span style="color: #00d2d3;">Minecraft Server WSS Endpoint:</span><br>
+              <span style="color: #ffa801; font-size: 1.1rem; word-break: break-all;">wss://localhost:8608/</span>
+            </div>
+
+            <div style="background: #0b0f19; padding: 1.2rem; border-radius: 6px; font-family: 'Fira Code', monospace; margin: 1rem 0; border: 1px solid #1e1e28;">
+              <span style="color: #00d2d3;">Singleplayer LAN Relay WSS Endpoint:</span><br>
+              <span style="color: #ffa801; font-size: 1.1rem; word-break: break-all;">wss://localhost:8608/relay</span>
+            </div>
+          </div>
+
+          <p style="color: #a4b0be; line-height: 1.6; margin-top: 2rem;">
+            Both connections route natively through port 8608. If your network (like Fortinet) blocks port 8608, you can launch the app with Administrator privileges on port 443 to override it!
+          </p>
         </div>
       </section>
 

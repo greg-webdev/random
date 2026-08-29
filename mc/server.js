@@ -209,6 +209,35 @@ function startServer(initialPort = process.env.PORT || 3007) {
         console.log(` Interface running at: ${url}`);
         console.log(`====================================================`);
         
+        // Boot Eaglercraft Proxy and SP Relay in the background
+        const { startEaglerProxyAndRelay } = require('./lib/eagler-proxy');
+        startEaglerProxyAndRelay().then(proxyControl => {
+          if (proxyControl && proxyControl.cleanup) {
+            process.on('exit', () => proxyControl.cleanup());
+            process.on('SIGINT', () => { proxyControl.cleanup(); });
+          }
+        }).catch(err => {
+          console.error('Failed to start Eaglercraft proxy/relay:', err.message);
+        });
+
+        // Boot Minecraft Server Control Panel backend in the background
+        console.log('Starting Minecraft Server Control Panel (port 3000)...');
+        const panelExe = path.join(__dirname, 'bin/MinecraftServerControlPanel.exe');
+        if (fs.existsSync(panelExe)) {
+          const panelProcess = spawn(panelExe, [], {
+            cwd: path.dirname(panelExe),
+            stdio: 'ignore'
+          });
+          process.on('exit', () => {
+            try { panelProcess.kill(); } catch (e) {}
+          });
+          process.on('SIGINT', () => {
+            try { panelProcess.kill(); } catch (e) {}
+          });
+        } else {
+          console.warn('[Warning] MinecraftServerControlPanel.exe not found in bin/ folder.');
+        }
+
         if (process.pkg) {
             import('open').then(open => open.default(url)).catch(err => {
                 console.error("Could not automatically open browser:", err);

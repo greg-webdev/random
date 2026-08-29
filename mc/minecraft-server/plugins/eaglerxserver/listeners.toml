@@ -1,0 +1,153 @@
+[[listener_list]]
+	listener_name = "listener0"
+	inject_address = "127.0.0.1:25566"
+	velocity_clone_listener = false
+	dual_stack = true
+	forward_ip = true
+	forward_ip_header = "X-Real-IP"
+	spoof_player_address_forwarded = true
+	server_motd = ["&6An EaglercraftX server"]
+	allow_motd = true
+	allow_query = true
+	show_motd_player_list = true
+	# Default value is false, sets if HTTP and WebSocket connections to this listener
+	# require a header with a secret to be accepted, can be used to prevent someone
+	# from bypassing CloudFlare, nginx, or whatever and connecting directly to the
+	# EaglerXServer listener with a fake forward IP header.
+	forward_secret = false
+	# Default value is 'X-Eagler-Secret', sets the name of the request header that
+	# contains the secret if the forward_secret option is enabled.
+	forward_secret_header = "X-Eagler-Secret"
+	# Default value is 'eagler_forwarding.secret', sets the name of the file that
+	# contains the secret if the forward_secret option is enabled, relative to the
+	# server's working directory.
+	forward_secret_file = "eagler_forwarding.secret"
+	# Default value is false, if HAProxy auto-detection should be enabled on this
+	# listener, if true then the first packet will be checked for a HAProxy PROXY
+	# protocol header, and will automatically disable HAProxy for the channel if it is
+	# not present. You must enable HAProxy on the underlying BungeeCord/Velocity
+	# listener for this to work properly.
+	dual_stack_haproxy_detection = false
+	# Default value is false, if HAProxy should be forcefully disabled when its
+	# detected on a channel from this listener. Can be useful if the underlying server
+	# does not allow disabling HAProxy on a per-listener basis (like Velocity).
+	force_disable_haproxy = false
+	# Default value is '', sets the WebSocket address to redirect legacy Eaglercraft
+	# 1.5 clients to if they mistakenly try to join the server through this listener.
+	redirect_legacy_clients_to = ""
+	# Default value is 'server-icon.png', sets the name of the 64x64 PNG file to
+	# display as this listener's server icon, relative to the working directory.
+	server_icon = "server-icon.png"
+	# Default value is true, If this listener should accept queries from post-u37
+	# clients to revoke session tokens, you need to create your own
+	# BungeeCord/Velocity plugin to go with EaglerXServer that handles the
+	# EaglercraftRevokeSessionQueryEvent event it fires in order for this feature to
+	# work correctly.
+	allow_cookie_revoke_query = true
+
+	[listener_list.tls_config]
+		enable_tls = false
+		# Default value is true, sets if this listener should always assume connections to
+		# be HTTPS (WSS), requires enable_tls to be true.
+		require_tls = true
+		# Default value is false, if the TLS certificates for this listener are managed by
+		# another plugin.
+		tls_managed_by_external_plugin = false
+		# The X.509 certificate chain file in PEM format, relative to the working
+		# directory.
+		tls_public_chain_file = "fullchain.pem"
+		# The PKCS#8 private key file in PEM format, relative to the working directory.
+		tls_private_key_file = "privatekey.pem"
+		# The password to the private key (if applicable), leave blank for none
+		tls_private_key_password = ""
+		# Default value is true, if the certificate and private key should be reloaded
+		# when changes are detected.
+		tls_auto_refresh_cert = true
+
+	[listener_list.ratelimit]
+		disable_ratelimit = ["127.0.0.0/8", "::1/128"]
+
+		[listener_list.ratelimit.ip]
+			enable = true
+			period = 90
+			limit = 60
+			# Sets the number of requests a single IP address can send in period seconds
+			# before being locked out.
+			limit_lockout = 80
+			# Sets the total number of seconds a "lock out" should last on this limiter.
+			lockout_duration = 1200
+
+		[listener_list.ratelimit.login]
+			enable = true
+			period = 50
+			limit = 5
+			# Sets the number of requests a single IP address can send in period seconds
+			# before being locked out.
+			limit_lockout = 10
+			# Sets the total number of seconds a "lock out" should last on this limiter.
+			lockout_duration = 300
+
+		# Sets ratelimit on MOTD query types.
+		[listener_list.ratelimit.motd]
+			# If the rate limit should be enabled.
+			enable = true
+			# Sets the period in the number of seconds.
+			period = 30
+			# Sets the number of requests a single IP address can send in period seconds
+			# before being limited.
+			limit = 5
+			# Sets the number of requests a single IP address can send in period seconds
+			# before being locked out.
+			limit_lockout = 15
+			# Sets the total number of seconds a "lock out" should last on this limiter.
+			lockout_duration = 300
+
+		# Sets ratelimit on all other query types.
+		[listener_list.ratelimit.query]
+			# If the rate limit should be enabled.
+			enable = true
+			# Sets the period in the number of seconds.
+			period = 30
+			# Sets the number of requests a single IP address can send in period seconds
+			# before being limited.
+			limit = 15
+			# Sets the number of requests a single IP address can send in period seconds
+			# before being locked out.
+			limit_lockout = 25
+			# Sets the total number of seconds a "lock out" should last on this limiter.
+			lockout_duration = 800
+
+		# Sets ratelimit on non-WebSocket HTTP connections.
+		[listener_list.ratelimit.http]
+			# If the rate limit should be enabled.
+			enable = true
+			# Sets the period in the number of seconds.
+			period = 30
+			# Sets the number of requests a single IP address can send in period seconds
+			# before being limited.
+			limit = 10
+			# Sets the number of requests a single IP address can send in period seconds
+			# before being locked out.
+			limit_lockout = 20
+			# Sets the total number of seconds a "lock out" should last on this limiter.
+			lockout_duration = 300
+
+	# Section that defines caching hints for server lists that cache the MOTD via the
+	# 'MOTD.cache' query. As far as we know, not even the official Eaglercraft Server
+	# List on eaglercraft.com currently pays attention to these hints or attempts to
+	# cache MOTDs, so they can be ignored for now.
+	[listener_list.request_motd_cache]
+		# Default value is 7200, sets how many seconds for the server list to store the
+		# MOTD in cache.
+		cache_ttl = 7200
+		# Default is false, if the MOTD should be cached in an "animated format" that is
+		# yet to be standardized.
+		online_server_list_animation = false
+		# Default is true, if the MOTD should be cached when shown in search results.
+		online_server_list_results = true
+		# Default is true, if the MOTD should be cached if the server makes it to the top
+		# of the homepage.
+		online_server_list_trending = true
+		# Default is true, if the MOTD should be cached when viewing more details about
+		# the specific server.
+		online_server_list_portfolios = true

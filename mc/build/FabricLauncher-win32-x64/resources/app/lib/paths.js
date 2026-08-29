@@ -2,7 +2,7 @@ const path = require('path');
 const os = require('os');
 const fs = require('fs-extra');
 
-const ROOT_DIR = path.resolve(__dirname, '..');
+const ROOT_DIR = process.pkg ? path.dirname(process.execPath) : path.resolve(__dirname, '..');
 const MODS_DIR = path.join(ROOT_DIR, 'mods');
 const INSTANCE_DIR = path.join(ROOT_DIR, 'instance');
 const ASSETS_DIR = path.join(ROOT_DIR, 'assets');

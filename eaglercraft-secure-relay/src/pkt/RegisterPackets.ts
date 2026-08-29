@@ -1,0 +1,26 @@
+import { RelayPacket } from './RelayPacket';
+import { RelayPacket00Handshake } from './RelayPacket00Handshake';
+import { RelayPacket01ICEServers } from './RelayPacket01ICEServers';
+import { RelayPacket02NewClient } from './RelayPacket02NewClient';
+import { RelayPacket03ICECandidate } from './RelayPacket03ICECandidate';
+import { RelayPacket04Description } from './RelayPacket04Description';
+import { RelayPacket05ClientSuccess } from './RelayPacket05ClientSuccess';
+import { RelayPacket06ClientFailure } from './RelayPacket06ClientFailure';
+import { RelayPacket07LocalWorlds } from './RelayPacket07LocalWorlds';
+import { RelayPacket69Pong } from './RelayPacket69Pong';
+import { RelayPacket70SpecialUpdate } from './RelayPacket70SpecialUpdate';
+import { RelayPacketFEDisconnectClient } from './RelayPacketFEDisconnectClient';
+import { RelayPacketFFErrorCode } from './RelayPacketFFErrorCode';
+
+RelayPacket.register(0, RelayPacket00Handshake, () => new RelayPacket00Handshake());
+RelayPacket.register(1, RelayPacket01ICEServers, () => new RelayPacket01ICEServers());
+RelayPacket.register(2, RelayPacket02NewClient, () => new RelayPacket02NewClient());
+RelayPacket.register(3, RelayPacket03ICECandidate, () => new RelayPacket03ICECandidate());
+RelayPacket.register(4, RelayPacket04Description, () => new RelayPacket04Description());
+RelayPacket.register(5, RelayPacket05ClientSuccess, () => new RelayPacket05ClientSuccess());
+RelayPacket.register(6, RelayPacket06ClientFailure, () => new RelayPacket06ClientFailure());
+RelayPacket.register(7, RelayPacket07LocalWorlds, () => new RelayPacket07LocalWorlds());
+RelayPacket.register(105, RelayPacket69Pong, () => new RelayPacket69Pong());
+RelayPacket.register(112, RelayPacket70SpecialUpdate, () => new RelayPacket70SpecialUpdate());
+RelayPacket.register(254, RelayPacketFEDisconnectClient, () => new RelayPacketFEDisconnectClient());
+RelayPacket.register(255, RelayPacketFFErrorCode, () => new RelayPacketFFErrorCode());

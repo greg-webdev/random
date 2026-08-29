@@ -567,10 +567,10 @@ io.on('connection', (socket) => {
             return;
         }
 
-        addLog('\n[System] Starting Minecraft Fabric Server 1.21.11 (Java 25)...\n');
+        addLog('\n[System] Starting Minecraft Fabric Server 1.21.11 (Java 21)...\n');
 
         // Spawn Java Process
-        mcProcess = spawn('java', ['-Xms1024M', '-Xmx2048M', '-jar', 'fabric-server.jar', 'nogui'], {
+        mcProcess = spawn('C:\\Program Files\\Java\\jdk-21\\bin\\java.exe', ['-Xms1024M', '-Xmx2048M', '-jar', 'fabric-server.jar', 'nogui'], {
             cwd: MCS_DIR
         });
 
