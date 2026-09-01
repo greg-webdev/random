@@ -1,7 +1,7 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
-const { spawn } = require('child_process');
+const { spawn, execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
@@ -562,12 +562,34 @@ io.on('connection', (socket) => {
     });
 
     socket.on('start-server', () => {
-        if (mcProcess) {
-            socket.emit('console-log', '\n[System] Server is already running!\n');
-            return;
-        }
+        addLog('\n[System] Cleaning up existing processes & ports before starting...\n');
 
-        addLog('\n[System] Starting Minecraft Fabric Server 1.21.11 (Java 21)...\n');
+        // 1. Force kill any process holding port 25565
+        try {
+            if (process.platform === 'win32') {
+                const portOut = execSync('powershell -NoProfile -Command "(Get-NetTCPConnection -LocalPort 25565 -ErrorAction SilentlyContinue).OwningProcess"', { encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] });
+                const pids = portOut.trim().split(/\r?\n/).map(p => p.trim()).filter(p => /^\d+$/.test(p) && p !== '0' && p !== String(process.pid));
+                for (const pid of pids) {
+                    addLog(`[System] Terminating process ${pid} using port 25565...\n`);
+                    execSync(`taskkill /F /PID ${pid}`, { stdio: 'ignore' });
+                }
+            }
+        } catch (e) {}
+
+        // 2. Force kill any other Java processes running fabric-server.jar
+        try {
+            if (process.platform === 'win32') {
+                execSync('powershell -NoProfile -Command "Get-CimInstance Win32_Process -Filter \\"Name = \'java.exe\'\\" | Where-Object { $_.CommandLine -like \'*fabric-server.jar*\' -or $_.CommandLine -like \'*mcserver*\' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"', { stdio: 'ignore' });
+            }
+        } catch (e) {}
+
+        // 3. Remove stale session.lock if left locked
+        try {
+            const lockFile = path.join(MCS_DIR, 'world', 'session.lock');
+            if (fs.existsSync(lockFile)) fs.unlinkSync(lockFile);
+        } catch (e) {}
+
+        addLog('[System] Starting Minecraft Fabric Server 1.21.11 (Java 21)...\n');
 
         // Spawn Java Process
         mcProcess = spawn('C:\\Program Files\\Java\\jdk-21\\bin\\java.exe', ['-Xms1024M', '-Xmx2048M', '-jar', 'fabric-server.jar', 'nogui'], {

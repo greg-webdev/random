@@ -1,0 +1,80 @@
+esphome:
+  name: seeed-xiao-c5-webserver
+  friendly_name: "Seeed XIAO ESP32-C5 Web Server"
+
+esp32:
+  variant: esp32c5
+  framework:
+    type: esp-idf
+
+logger:
+  level: INFO
+
+# External component for file manager and live code runner
+external_components:
+  - source:
+      type: local
+      path: components
+
+custom_web:
+
+# Wi-Fi configuration with multiple networks (potato and geg) plus fallback AP
+wifi:
+  networks:
+    - ssid: "potato"
+      password: "aaaaaaaa"
+    - ssid: "geg"
+      password: "aaaaaaaa"
+  ap:
+    ssid: "Seeed-C5-AP"
+    password: "SeeedPassword123"
+
+# Captive Portal for automatic redirect when connected to the AP
+captive_portal:
+
+# Standalone Web Server with local offline UI assets
+web_server:
+  port: 80
+  version: 3
+  local: true
+
+# Enable mDNS for accessing via http://seeed-xiao-c5-webserver.local
+mdns:
+
+# Diagnostic and interactive controls on the web interface
+sensor:
+  - platform: uptime
+    name: "Uptime"
+    id: sys_uptime
+    update_interval: 10s
+
+  - platform: wifi_signal
+    name: "Wi-Fi Signal"
+    id: wifi_sig
+    update_interval: 10s
+
+binary_sensor:
+  - platform: status
+    name: "System Status"
+
+  - platform: gpio
+    pin:
+      number: GPIO28
+      inverted: true
+      mode:
+        input: true
+        pullup: true
+    name: "Boot Button"
+
+switch:
+  - platform: gpio
+    pin:
+      number: GPIO27
+      inverted: false
+    name: "User LED (GPIO27)"
+    id: user_led
+    restore_mode: ALWAYS_OFF
+
+button:
+  - platform: restart
+    name: "Restart Device"

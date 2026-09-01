@@ -1,0 +1,177 @@
+<Window x:Class="WpfChromiumBrowser.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WpfChromiumBrowser"
+        mc:Ignorable="d"
+        Title="Chromium Browser"
+        Height="840" Width="1280"
+        MinHeight="480" MinWidth="640"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource BgPrimary}"
+        Foreground="{StaticResource TextPrimary}"
+        WindowStyle="None"
+        PreviewKeyDown="Window_PreviewKeyDown">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="38"
+                      CornerRadius="0"
+                      GlassFrameThickness="0"
+                      ResizeBorderThickness="6"
+                      UseAeroCaptionButtons="False" />
+    </WindowChrome.WindowChrome>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <!-- Row 0: Custom Titlebar & Tab Strip -->
+            <RowDefinition Height="38" />
+            <!-- Row 1: Navigation & Omnibox Bar -->
+            <RowDefinition Height="46" />
+            <!-- Row 2: Bookmarks Bar -->
+            <RowDefinition Height="32" />
+            <!-- Row 3: Main Browser WebViews Container -->
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- TOP BAR: Tab Strip & Window Controls -->
+        <Grid Grid.Row="0" Background="{StaticResource BgPrimary}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Tabs List & New Tab Button -->
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled"
+                          WindowChrome.IsHitTestVisibleInChrome="True" Margin="4,4,0,0">
+                <StackPanel x:Name="TabsPanel" Orientation="Horizontal" VerticalAlignment="Bottom">
+                    <!-- Dynamic Tab Headers will be added here -->
+                    <Button x:Name="BtnNewTab" Style="{StaticResource NavButtonStyle}" Width="28" Height="28"
+                            Margin="4,0,0,2" ToolTip="New Tab (Ctrl+T)" Click="BtnNewTab_Click">
+                        <TextBlock Text="+" FontSize="18" FontWeight="SemiBold" Margin="0,-2,0,0" />
+                    </Button>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Window Caption Controls (Min, Max, Close) -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" WindowChrome.IsHitTestVisibleInChrome="True">
+                <Button x:Name="BtnMinimize" Style="{StaticResource WindowControlButtonStyle}" Click="BtnMinimize_Click" ToolTip="Minimize">
+                    <TextBlock Text="—" FontSize="11" />
+                </Button>
+                <Button x:Name="BtnMaximize" Style="{StaticResource WindowControlButtonStyle}" Click="BtnMaximize_Click" ToolTip="Maximize">
+                    <TextBlock x:Name="TxtMaxIcon" Text="▢" FontSize="14" />
+                </Button>
+                <Button x:Name="BtnClose" Style="{StaticResource WindowCloseButtonStyle}" Click="BtnClose_Click" ToolTip="Close">
+                    <TextBlock Text="✕" FontSize="12" />
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- NAVIGATION & OMNIBOX BAR -->
+        <Grid Grid.Row="1" Background="{StaticResource BgSecondary}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Nav Controls (Back, Forward, Reload, Home) -->
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,4,0">
+                <Button x:Name="BtnBack" Style="{StaticResource NavButtonStyle}" ToolTip="Back (Alt+Left)" Click="BtnBack_Click">
+                    <TextBlock Text="◀" FontSize="12" />
+                </Button>
+                <Button x:Name="BtnForward" Style="{StaticResource NavButtonStyle}" ToolTip="Forward (Alt+Right)" Click="BtnForward_Click" Margin="2,0,0,0">
+                    <TextBlock Text="▶" FontSize="12" />
+                </Button>
+                <Button x:Name="BtnReload" Style="{StaticResource NavButtonStyle}" ToolTip="Reload (Ctrl+R)" Click="BtnReload_Click" Margin="2,0,0,0">
+                    <TextBlock x:Name="TxtReloadIcon" Text="⟳" FontSize="16" />
+                </Button>
+                <Button x:Name="BtnHome" Style="{StaticResource NavButtonStyle}" ToolTip="Open Home Page" Click="BtnHome_Click" Margin="2,0,0,0">
+                    <TextBlock Text="🏠" FontSize="13" />
+                </Button>
+            </StackPanel>
+
+            <!-- Omnibox (Address Bar) -->
+            <Border Grid.Column="1" Background="{StaticResource BgPrimary}" CornerRadius="17"
+                    BorderBrush="{StaticResource BorderBrushColor}" BorderThickness="1"
+                    Height="34" Margin="4,0,4,0" VerticalAlignment="Center">
+                <Grid Margin="12,0,6,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock x:Name="TxtSecurityBadge" Grid.Column="0" Text="🔒" FontSize="13"
+                               VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{StaticResource AccentCyan}" />
+
+                    <TextBox x:Name="TxtOmnibox" Grid.Column="1" Background="Transparent"
+                             Foreground="{StaticResource TextPrimary}" BorderThickness="0"
+                             FontSize="13.5" VerticalAlignment="Center"
+                             CaretBrush="{StaticResource AccentBlue}"
+                             KeyDown="TxtOmnibox_KeyDown" GotFocus="TxtOmnibox_GotFocus" />
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button x:Name="BtnStar" Style="{StaticResource NavButtonStyle}" Width="26" Height="26"
+                                ToolTip="Bookmark this tab (Ctrl+D)" Click="BtnStar_Click">
+                            <TextBlock x:Name="TxtStarIcon" Text="☆" FontSize="15" />
+                        </Button>
+                        <Button x:Name="BtnDevTools" Style="{StaticResource NavButtonStyle}" Width="26" Height="26"
+                                ToolTip="Chrome DevTools (F12)" Click="BtnDevTools_Click" Margin="2,0,0,0">
+                            <TextBlock Text="⚙" FontSize="14" />
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Menu Button & Dropdown Context -->
+            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,8,0">
+                <Button x:Name="BtnMenu" Style="{StaticResource NavButtonStyle}" ToolTip="Customize and control browser" Click="BtnMenu_Click">
+                    <TextBlock Text="⋮" FontSize="18" FontWeight="Bold" />
+                    <Button.ContextMenu>
+                        <ContextMenu Background="{StaticResource BgTertiary}" Foreground="{StaticResource TextPrimary}">
+                            <MenuItem Header="New Tab (Ctrl+T)" Click="MenuNewTab_Click" />
+                            <MenuItem Header="Chrome DevTools (F12)" Click="MenuDevTools_Click" />
+                            <Separator Background="{StaticResource BorderBrushColor}" />
+                            <MenuItem Header="History (Ctrl+H)" Click="MenuHistory_Click" />
+                            <MenuItem Header="Bookmarks (Ctrl+B)" Click="MenuBookmarks_Click" />
+                            <MenuItem Header="Downloads (Ctrl+J)" Click="MenuDownloads_Click" />
+                            <Separator Background="{StaticResource BorderBrushColor}" />
+                            <MenuItem Header="Chrome URLs (chrome://about)" Click="MenuUrls_Click" />
+                            <MenuItem Header="Chromium Version (chrome://version)" Click="MenuVersion_Click" />
+                            <MenuItem Header="Play Dino Game (chrome://dino)" Click="MenuDino_Click" />
+                            <MenuItem Header="Settings (chrome://settings)" Click="MenuSettings_Click" />
+                            <Separator Background="{StaticResource BorderBrushColor}" />
+                            <MenuItem Header="Exit" Click="MenuExit_Click" />
+                        </ContextMenu>
+                    </Button.ContextMenu>
+                </Button>
+            </StackPanel>
+
+            <!-- Loading Progress Bar -->
+            <ProgressBar x:Name="ProgLoading" Grid.ColumnSpan="3" VerticalAlignment="Bottom" Height="2.5"
+                         Background="Transparent" Foreground="{StaticResource AccentBlue}" BorderThickness="0"
+                         IsIndeterminate="False" Visibility="Collapsed" />
+        </Grid>
+
+        <!-- BOOKMARKS QUICK BAR -->
+        <Border Grid.Row="2" Background="{StaticResource BgSecondary}" BorderBrush="{StaticResource BorderBrushColor}" BorderThickness="0,1,0,1">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                <StackPanel x:Name="BookmarksPanel" Orientation="Horizontal" VerticalAlignment="Center" Margin="6,0,6,0">
+                    <Button Content="🔍 Google" Style="{StaticResource NavButtonStyle}" Width="Auto" Padding="8,0" Height="24" FontSize="11.5" Click="QuickBm_Click" Tag="https://www.google.com" />
+                    <Button Content="▶ YouTube" Style="{StaticResource NavButtonStyle}" Width="Auto" Padding="8,0" Height="24" FontSize="11.5" Click="QuickBm_Click" Tag="https://www.youtube.com" Margin="4,0,0,0" />
+                    <Button Content="🐙 GitHub" Style="{StaticResource NavButtonStyle}" Width="Auto" Padding="8,0" Height="24" FontSize="11.5" Click="QuickBm_Click" Tag="https://github.com" Margin="4,0,0,0" />
+                    <Button Content="📖 Wikipedia" Style="{StaticResource NavButtonStyle}" Width="Auto" Padding="8,0" Height="24" FontSize="11.5" Click="QuickBm_Click" Tag="https://www.wikipedia.org" Margin="4,0,0,0" />
+                    <Button Content="⚡ Chrome URLs" Style="{StaticResource NavButtonStyle}" Width="Auto" Padding="8,0" Height="24" FontSize="11.5" Click="QuickBm_Click" Tag="chrome://about" Margin="4,0,0,0" />
+                    <Button Content="ℹ Version Info" Style="{StaticResource NavButtonStyle}" Width="Auto" Padding="8,0" Height="24" FontSize="11.5" Click="QuickBm_Click" Tag="chrome://version" Margin="4,0,0,0" />
+                    <Button Content="🦖 Dino Game" Style="{StaticResource NavButtonStyle}" Width="Auto" Padding="8,0" Height="24" FontSize="11.5" Click="QuickBm_Click" Tag="chrome://dino" Margin="4,0,0,0" />
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- MAIN BROWSER CONTENT (WebViews) -->
+        <Grid x:Name="WebViewsContainer" Grid.Row="3" Background="White">
+            <!-- Active WebViews are dynamically added and displayed here -->
+        </Grid>
+    </Grid>
+</Window>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bookmarks</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #1a1c23;
+      color: #e5e7eb;
+      padding: 30px;
+    }
+    .container {
+      max-width: 850px;
+      margin: 0 auto;
+    }
+    .header-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    h1 {
+      font-size: 24px;
+      color: #38bdf8;
+    }
+    .add-form {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      background: #252834;
+      padding: 16px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .input-field {
+      flex: 1;
+      background: #1a1c23;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      padding: 8px 12px;
+      color: #f3f4f6;
+      font-size: 13px;
+      outline: none;
+    }
+    .input-field:focus {
+      border-color: #3b82f6;
+    }
+    .btn-primary {
+      background: #3b82f6;
+      border: none;
+      color: #ffffff;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .btn-primary:hover {
+      background: #2563eb;
+    }
+    .bookmarks-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 12px;
+    }
+    .bm-card {
+      background: #252834;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      transition: all 0.15s;
+    }
+    .bm-card:hover {
+      background: #323746;
+      border-color: #3b82f6;
+    }
+    .bm-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      overflow: hidden;
+      flex: 1;
+      text-decoration: none;
+      color: inherit;
+    }
+    .bm-icon {
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .bm-details {
+      overflow: hidden;
+    }
+    .bm-title {
+      font-size: 13.5px;
+      font-weight: 500;
+      color: #f3f4f6;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .bm-url {
+      font-size: 11.5px;
+      color: #9ca3af;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .bm-del {
+      background: transparent;
+      border: none;
+      color: #6b7280;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+    }
+    .bm-del:hover {
+      color: #ef4444;
+      background: rgba(239, 68, 68, 0.1);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header-bar">
+      <h1>Bookmark Manager</h1>
+    </div>
+
+    <form class="add-form" id="add-bm-form">
+      <input type="text" id="bm-title-input" class="input-field" placeholder="Page Title" required />
+      <input type="text" id="bm-url-input" class="input-field" placeholder="https://example.com" required />
+      <button type="submit" class="btn-primary">Add Bookmark</button>
+    </form>
+
+    <div class="bookmarks-grid" id="bm-grid">
+      <!-- Bookmarks dynamically rendered -->
+    </div>
+  </div>
+
+  <script>
+    let bookmarks = [];
+
+    async function loadBookmarks() {
+      if (window.parent && window.parent.browserAPI) {
+        bookmarks = await window.parent.browserAPI.getBookmarks();
+      } else {
+        bookmarks = [
+          { id: '1', title: 'Google', url: 'https://www.google.com' },
+          { id: '2', title: 'YouTube', url: 'https://www.youtube.com' },
+          { id: '3', title: 'GitHub', url: 'https://github.com' }
+        ];
+      }
+      render();
+    }
+
+    function render() {
+      const grid = document.getElementById('bm-grid');
+      grid.innerHTML = bookmarks.map(b => `
+        <div class="bm-card">
+          <a class="bm-info" href="${b.url}">
+            <div class="bm-icon">⭐</div>
+            <div class="bm-details">
+              <div class="bm-title">${b.title}</div>
+              <div class="bm-url">${b.url}</div>
+            </div>
+          </a>
+          <button class="bm-del" onclick="removeBookmark('${b.id}')" title="Delete">✕</button>
+        </div>
+      `).join('');
+    }
+
+    async function removeBookmark(id) {
+      bookmarks = bookmarks.filter(b => b.id !== id);
+      if (window.parent && window.parent.browserAPI) {
+        await window.parent.browserAPI.saveBookmarks(bookmarks);
+      }
+      render();
+    }
+
+    document.getElementById('add-bm-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const title = document.getElementById('bm-title-input').value.trim();
+      let url = document.getElementById('bm-url-input').value.trim();
+      if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('chrome://')) {
+        url = 'https://' + url;
+      }
+      bookmarks.push({ id: Date.now().toString(), title, url });
+      if (window.parent && window.parent.browserAPI) {
+        await window.parent.browserAPI.saveBookmarks(bookmarks);
+      }
+      document.getElementById('bm-title-input').value = '';
+      document.getElementById('bm-url-input').value = '';
+      render();
+    });
+
+    loadBookmarks();
+  </script>
+</body>
+</html>

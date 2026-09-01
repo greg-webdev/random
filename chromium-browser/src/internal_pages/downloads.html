@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Downloads</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #1a1c23;
+      color: #e5e7eb;
+      padding: 30px;
+    }
+    .container {
+      max-width: 850px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 24px;
+      color: #38bdf8;
+      margin-bottom: 24px;
+    }
+    .downloads-list {
+      background: #252834;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+    }
+    .download-item {
+      padding: 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .download-item:last-child {
+      border-bottom: none;
+    }
+    .dl-icon {
+      font-size: 24px;
+      color: #3b82f6;
+    }
+    .dl-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .dl-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: #f3f4f6;
+    }
+    .dl-status {
+      font-size: 12px;
+      color: #9ca3af;
+    }
+    .dl-progress {
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .dl-bar {
+      height: 100%;
+      background: #3b82f6;
+      width: 0%;
+      transition: width 0.2s;
+    }
+    .empty-state {
+      padding: 50px;
+      text-align: center;
+      color: #9ca3af;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Downloads</h1>
+    <div class="downloads-list" id="downloads-list">
+      <div class="empty-state">No downloads in progress or history.</div>
+    </div>
+  </div>
+
+  <script>
+    const list = document.getElementById('downloads-list');
+    const downloads = new Map();
+
+    function formatBytes(bytes) {
+      if (!bytes || bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    function render() {
+      if (downloads.size === 0) {
+        list.innerHTML = '<div class="empty-state">No downloads in progress or history.</div>';
+        return;
+      }
+      list.innerHTML = Array.from(downloads.values()).map(dl => {
+        const percent = dl.totalBytes ? Math.round((dl.receivedBytes / dl.totalBytes) * 100) : 0;
+        return `
+          <div class="download-item">
+            <div class="dl-icon">📥</div>
+            <div class="dl-content">
+              <div class="dl-name">${dl.name}</div>
+              <div class="dl-status">${dl.state} - ${formatBytes(dl.receivedBytes)} / ${formatBytes(dl.totalBytes)} (${percent}%)</div>
+              ${dl.state === 'progressing' ? `
+                <div class="dl-progress">
+                  <div class="dl-bar" style="width: ${percent}%"></div>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    if (window.parent && window.parent.browserAPI) {
+      window.parent.browserAPI.onDownloadUpdated((data) => {
+        downloads.set(data.id, data);
+        render();
+      });
+    }
+  </script>
+</body>
+</html>

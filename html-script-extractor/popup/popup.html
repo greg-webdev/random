@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HTML & Script Harvester</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="brand-logo">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 18 22 12 16 6"></polyline>
+            <polyline points="8 6 2 12 8 18"></polyline>
+            <line x1="14" y1="4" x2="10" y2="20"></line>
+          </svg>
+        </div>
+        <div class="brand-info">
+          <h1 class="brand-title">HTML & Script Harvester</h1>
+          <div class="target-url-container">
+            <span id="target-host" class="target-host">Loading...</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button id="btn-download-zip" class="btn btn-primary" title="Export Raw HTML, Live DOM, and all scripts into a single ZIP archive">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span>Export ZIP</span>
+        </button>
+        <button id="btn-rescan" class="btn btn-icon" title="Rescan page">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs">
+      <button class="nav-tab active" data-tab="tab-scripts">
+        <span class="tab-label">Scripts</span>
+        <span id="badge-scripts-count" class="tab-badge">0</span>
+      </button>
+      <button class="nav-tab" data-tab="tab-raw-html">
+        <span class="tab-label">Raw Server HTML</span>
+        <span id="badge-raw-status" class="tab-badge tab-badge-gray">--</span>
+      </button>
+      <button class="nav-tab" data-tab="tab-live-dom">
+        <span class="tab-label">Rendered DOM</span>
+        <span id="badge-dom-size" class="tab-badge tab-badge-gray">--</span>
+      </button>
+      <button class="nav-tab" data-tab="tab-viewer">
+        <span class="tab-label">Source Viewer</span>
+      </button>
+    </nav>
+
+    <!-- Main Content Panels -->
+    <main class="main-content">
+      <!-- 1. SCRIPTS TAB -->
+      <section id="tab-scripts" class="tab-panel active">
+        <!-- Controls Bar -->
+        <div class="panel-controls">
+          <div class="search-box">
+            <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="script-search" placeholder="Filter by URL, filename, or type..." />
+            <button id="clear-search" class="clear-btn" style="display:none;">&times;</button>
+          </div>
+          <div class="filter-chips">
+            <button class="chip active" data-filter="all">All (<span id="count-all">0</span>)</button>
+            <button class="chip" data-filter="external">External (<span id="count-external">0</span>)</button>
+            <button class="chip" data-filter="inline">Inline (<span id="count-inline">0</span>)</button>
+            <button class="chip" data-filter="dynamic">Dynamic & Net (<span id="count-dynamic">0</span>)</button>
+          </div>
+        </div>
+
+        <!-- Quick Summary & Actions -->
+        <div class="summary-bar">
+          <div id="scripts-summary-text" class="summary-text">Scanning for scripts...</div>
+          <div class="summary-actions">
+            <button id="btn-copy-urls" class="btn-text" title="Copy list of all script URLs to clipboard">Copy URLs</button>
+          </div>
+        </div>
+
+        <!-- Scripts List Container -->
+        <div class="scroll-container">
+          <div id="scripts-list" class="scripts-list">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. RAW SERVER HTML TAB -->
+      <section id="tab-raw-html" class="tab-panel">
+        <div class="panel-toolbar">
+          <div class="meta-tags">
+            <span id="raw-status-tag" class="meta-tag tag-success">HTTP 200</span>
+            <span id="raw-size-tag" class="meta-tag">0 KB</span>
+            <span id="raw-time-tag" class="meta-tag">0 ms</span>
+          </div>
+          <div class="toolbar-actions">
+            <button id="btn-copy-raw-html" class="btn btn-secondary btn-sm">Copy</button>
+            <button id="btn-download-raw-html" class="btn btn-primary btn-sm">Download HTML</button>
+          </div>
+        </div>
+        <div class="code-view-container">
+          <div id="raw-html-loading" class="loading-state">
+            <div class="spinner"></div>
+            <span>Fetching original server HTML...</span>
+          </div>
+          <pre id="raw-html-pre" class="code-pre" style="display:none;"><code id="raw-html-code"></code></pre>
+        </div>
+      </section>
+
+      <!-- 3. RENDERED DOM TAB -->
+      <section id="tab-live-dom" class="tab-panel">
+        <div class="panel-toolbar">
+          <div class="meta-tags">
+            <span class="meta-tag tag-purple">Live DOM Tree</span>
+            <span id="dom-size-tag" class="meta-tag">0 KB</span>
+            <span id="dom-elements-tag" class="meta-tag">0 elements</span>
+          </div>
+          <div class="toolbar-actions">
+            <button id="btn-copy-dom-html" class="btn btn-secondary btn-sm">Copy</button>
+            <button id="btn-download-dom-html" class="btn btn-primary btn-sm">Download DOM</button>
+          </div>
+        </div>
+        <div class="code-view-container">
+          <pre id="dom-html-pre" class="code-pre"><code id="dom-html-code"></code></pre>
+        </div>
+      </section>
+
+      <!-- 4. SOURCE VIEWER TAB -->
+      <section id="tab-viewer" class="tab-panel">
+        <div class="panel-toolbar viewer-toolbar">
+          <div class="viewer-meta">
+            <span id="viewer-type-tag" class="meta-tag tag-blue">SCRIPT</span>
+            <span id="viewer-title" class="viewer-title" title="No script selected">No script selected</span>
+          </div>
+          <div class="toolbar-actions">
+            <button id="btn-viewer-format" class="btn btn-secondary btn-sm" title="Beautify / format JS">Beautify</button>
+            <button id="btn-viewer-copy" class="btn btn-secondary btn-sm">Copy</button>
+            <button id="btn-viewer-download" class="btn btn-primary btn-sm">Download</button>
+          </div>
+        </div>
+        <div class="code-view-container">
+          <div id="viewer-empty" class="empty-state">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            <p>Select any script from the <strong>Scripts</strong> tab to inspect its full source code.</p>
+          </div>
+          <div id="viewer-loading" class="loading-state" style="display:none;">
+            <div class="spinner"></div>
+            <span>Loading script source...</span>
+          </div>
+          <pre id="viewer-pre" class="code-pre" style="display:none;"><code id="viewer-code"></code></pre>
+        </div>
+      </section>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast" style="display:none;"></div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="../lib/simple-zip.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

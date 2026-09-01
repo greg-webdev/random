@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ollama Agent</title>
+  <link rel="stylesheet" href="main.css">
+</head>
+<body>
+  <div class="agent-container">
+    <!-- Top Header Bar -->
+    <header class="agent-header">
+      <div class="header-left">
+        <div class="status-indicator" id="statusIndicator" title="Connecting to Ollama...">
+          <span class="status-dot"></span>
+        </div>
+        <div class="model-picker-wrapper">
+          <select id="modelSelect" class="model-select" title="Select active Ollama model">
+            <option value="" disabled selected>Loading models...</option>
+          </select>
+        </div>
+      </div>
+      <div class="header-right">
+        <label class="toggle-mode" title="Autonomous Mode: Allow Ollama to inspect files and execute tools">
+          <input type="checkbox" id="autonomousToggle" checked>
+          <span class="toggle-label">Agent</span>
+        </label>
+        
+        <!-- Saved Chats History Drawer Button -->
+        <button id="historyBtn" class="icon-btn" title="Saved Chats History">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M8.515 1.019A7 7 0 0 0 8 1a7 7 0 1 0 7 7h-1.5A5.5 5.5 0 1 1 8 2.5c.348 0 .686.037 1.014.103l-1.368 1.368 1.06 1.06 3.183-3.182-3.182-3.182-1.06 1.06 1.868 1.212zM8 4.5a.75.75 0 0 1 .75.75v2.69l1.83 1.055a.75.75 0 1 1-.76 1.296l-2.2-1.27A.75.75 0 0 1 7.25 8.37V5.25A.75.75 0 0 1 8 4.5z"/>
+          </svg>
+        </button>
+
+        <!-- Save & Export Menu Button -->
+        <button id="exportBtn" class="icon-btn" title="Export / Save Chat (.md or .json)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M13.5 1h-11A1.5 1.5 0 0 0 1 2.5v11A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-11A1.5 1.5 0 0 0 13.5 1zm-8 1.5h5v3h-5v-3zm7.5 11h-10a.5.5 0 0 1-.5-.5V8.5a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 .5.5v4.5a.5.5 0 0 1-.5.5zM7 10.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1z"/>
+          </svg>
+        </button>
+
+        <!-- New Chat Session Button -->
+        <button id="newChatBtn" class="icon-btn" title="Start New Chat Session">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M8 2a.75.75 0 0 1 .75.75v4.5h4.5a.75.75 0 0 1 0 1.5h-4.5v4.5a.75.75 0 0 1-1.5 0v-4.5h-4.5a.75.75 0 0 1 0-1.5h4.5v-4.5A.75.75 0 0 1 8 2z"/>
+          </svg>
+        </button>
+
+        <!-- Clear Chat Button -->
+        <button id="clearChatBtn" class="icon-btn" title="Clear Current View">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M8 8.707l3.646 3.647.708-.707L8.707 8l3.647-3.646-.707-.708L8 7.293 4.354 3.646l-.708.708L7.293 8l-3.647 3.646.708.707L8 8.707z"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Context Information Banner -->
+    <div id="contextBanner" class="context-banner hidden">
+      <div class="context-pill">
+        <span class="context-icon">📄</span>
+        <span id="activeFileName" class="context-file">No file open</span>
+        <span id="activeSelectionInfo" class="context-selection"></span>
+        <button id="removeContextBtn" class="context-remove" title="Detach context">×</button>
+      </div>
+    </div>
+
+    <!-- History Slide-over Drawer / Panel -->
+    <div id="historyDrawer" class="history-drawer hidden">
+      <div class="history-header">
+        <div class="history-title-wrap">
+          <span class="history-icon">📜</span>
+          <span class="history-title">Saved Chats</span>
+        </div>
+        <div class="history-header-actions">
+          <button id="clearAllHistoryBtn" class="history-header-btn" title="Delete all saved chats">Clear All</button>
+          <button id="closeHistoryBtn" class="icon-btn" title="Close History">×</button>
+        </div>
+      </div>
+      <div class="history-search-wrap">
+        <input type="text" id="historySearch" placeholder="Search saved conversations..." />
+      </div>
+      <div id="historyList" class="history-list">
+        <div class="history-empty">No saved chats yet. Conversations are automatically saved here.</div>
+      </div>
+    </div>
+
+    <!-- Chat Messages Scroll Container -->
+    <main id="chatMessages" class="chat-messages">
+      <!-- Welcome Card for Empty State -->
+      <div id="emptyState" class="empty-state">
+        <div class="empty-icon-wrap">
+          <div class="brand-logo">🦙</div>
+        </div>
+        <h2>Ollama Agent</h2>
+        <p class="subtitle">Autonomous local AI pair programmer for Antigravity IDE</p>
+
+        <div class="quick-actions">
+          <button class="quick-btn" data-action="explain">
+            <span class="quick-icon">💡</span>
+            <div class="quick-text">
+              <span class="quick-title">Explain Code</span>
+              <span class="quick-desc">Break down logic and flow</span>
+            </div>
+          </button>
+
+          <button class="quick-btn" data-action="refactor">
+            <span class="quick-icon">⚡</span>
+            <div class="quick-text">
+              <span class="quick-title">Refactor & Optimize</span>
+              <span class="quick-desc">Enhance performance & clean code</span>
+            </div>
+          </button>
+
+          <button class="quick-btn" data-action="tests">
+            <span class="quick-icon">🧪</span>
+            <div class="quick-text">
+              <span class="quick-title">Generate Tests</span>
+              <span class="quick-desc">Create edge-case unit test suites</span>
+            </div>
+          </button>
+
+          <button class="quick-btn" data-action="diagnostics">
+            <span class="quick-icon">🛠️</span>
+            <div class="quick-text">
+              <span class="quick-title">Fix Diagnostics</span>
+              <span class="quick-desc">Resolve errors & warnings in editor</span>
+            </div>
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Chat Input Area -->
+    <footer class="input-area">
+      <div class="input-wrapper">
+        <textarea
+          id="chatInput"
+          placeholder="Ask Ollama or type / for slash commands..."
+          rows="1"
+        ></textarea>
+        <div class="input-bottom-bar">
+          <div class="input-shortcuts">
+            <button id="attachContextBtn" class="shortcut-tag" title="Attach active editor selection">
+              <span>+ Context</span>
+            </button>
+            <button id="saveCurrentSessionBtn" class="shortcut-tag" title="Save this chat session">
+              <span>💾 Save</span>
+            </button>
+          </div>
+          <button id="sendBtn" class="send-btn" title="Send message (Enter)">
+            <svg class="send-icon" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M1.5 1.5l13 6.5-13 6.5V9.5l8-1.5-8-1.5V1.5z"/>
+            </svg>
+            <svg class="stop-icon hidden" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <rect x="3" y="3" width="10" height="10" rx="2"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>

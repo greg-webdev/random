@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>About Version</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #1a1c23;
+      color: #e5e7eb;
+      padding: 40px;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: #252834;
+      border-radius: 12px;
+      padding: 32px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    h1 {
+      font-size: 26px;
+      margin-bottom: 24px;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .info-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .info-table tr {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .info-table td {
+      padding: 12px 8px;
+      font-size: 14px;
+    }
+    .info-table td.label {
+      width: 200px;
+      color: #9ca3af;
+      font-weight: 500;
+    }
+    .info-table td.value {
+      color: #f3f4f6;
+      font-family: monospace;
+      word-break: break-all;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+      font-size: 12px;
+      font-weight: bold;
+      margin-left: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>
+      <span>Chromium</span>
+      <span class="badge">Official Engine</span>
+    </h1>
+
+    <table class="info-table">
+      <tr>
+        <td class="label">Chromium Engine:</td>
+        <td class="value" id="val-chrome">Loading...</td>
+      </tr>
+      <tr>
+        <td class="label">Application Shell:</td>
+        <td class="value" id="val-electron">Loading...</td>
+      </tr>
+      <tr>
+        <td class="label">JavaScript Engine:</td>
+        <td class="value" id="val-v8">Loading...</td>
+      </tr>
+      <tr>
+        <td class="label">Node.js Runtime:</td>
+        <td class="value" id="val-node">Loading...</td>
+      </tr>
+      <tr>
+        <td class="label">Operating System:</td>
+        <td class="value" id="val-os">Loading...</td>
+      </tr>
+      <tr>
+        <td class="label">User Agent:</td>
+        <td class="value" id="val-ua">Loading...</td>
+      </tr>
+    </table>
+  </div>
+
+  <script>
+    if (window.navigator) {
+      document.getElementById('val-ua').textContent = navigator.userAgent;
+      document.getElementById('val-chrome').textContent = (navigator.userAgent.match(/Chrome\/([\d.]+)/) || [,'Chromium'])[1];
+      document.getElementById('val-electron').textContent = (navigator.userAgent.match(/Electron\/([\d.]+)/) || [,'1.0.0'])[1];
+      document.getElementById('val-v8').textContent = 'V8 High-Performance JIT';
+      document.getElementById('val-node').textContent = 'v24.x Node';
+      document.getElementById('val-os').textContent = navigator.platform;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,514 @@
+:root {
+  --bg-primary: #121316;
+  --bg-secondary: #1a1c23;
+  --bg-tertiary: #252834;
+  --bg-hover: #323746;
+  --bg-active: #3e4456;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-focus: #3b82f6;
+  
+  --text-primary: #f3f4f6;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+  
+  --accent-blue: #3b82f6;
+  --accent-cyan: #06b6d4;
+  --accent-green: #10b981;
+  --accent-yellow: #f59e0b;
+  --accent-red: #ef4444;
+
+  --tab-height: 38px;
+  --nav-height: 44px;
+  --bookmark-height: 32px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --shadow-dropdown: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* App Header & Drag Region */
+#browser-header {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  z-index: 100;
+}
+
+/* Tab Bar & Window Controls */
+.tabbar-container {
+  display: flex;
+  align-items: center;
+  height: var(--tab-height);
+  padding: 0 4px 0 8px;
+  background-color: var(--bg-primary);
+  -webkit-app-region: drag;
+}
+
+.tabs-list {
+  display: flex;
+  align-items: flex-end;
+  flex: 1;
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  gap: 2px;
+  padding-top: 4px;
+  -webkit-app-region: no-drag;
+}
+
+.tabs-list::-webkit-scrollbar {
+  display: none;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  min-width: 140px;
+  max-width: 220px;
+  flex: 1;
+  height: 34px;
+  padding: 0 10px;
+  background-color: transparent;
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  cursor: pointer;
+  position: relative;
+  font-size: 12.5px;
+  gap: 8px;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.tab:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+}
+
+.tab.active {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  font-weight: 500;
+  box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.tab-favicon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tab-favicon img {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+
+.tab-title {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tab-close-btn {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s, background-color 0.15s;
+  flex-shrink: 0;
+}
+
+.tab:hover .tab-close-btn,
+.tab.active .tab-close-btn {
+  opacity: 0.7;
+}
+
+.tab-close-btn:hover {
+  opacity: 1 !important;
+  background-color: rgba(255, 255, 255, 0.15);
+  color: var(--text-primary);
+}
+
+.new-tab-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+  -webkit-app-region: no-drag;
+  margin-left: 4px;
+}
+
+.new-tab-btn:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* Window Control Buttons */
+.window-controls {
+  display: flex;
+  align-items: center;
+  -webkit-app-region: no-drag;
+  margin-left: auto;
+}
+
+.win-btn {
+  width: 44px;
+  height: var(--tab-height);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.win-btn:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+.win-btn.win-close:hover {
+  background-color: var(--accent-red);
+  color: #ffffff;
+}
+
+/* Navigation & Omnibox Bar */
+.navbar-container {
+  display: flex;
+  align-items: center;
+  height: var(--nav-height);
+  padding: 0 8px;
+  gap: 6px;
+  background-color: var(--bg-secondary);
+  position: relative;
+}
+
+.nav-action-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+}
+
+.nav-action-btn:hover:not(:disabled) {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.nav-action-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Omnibox / Address Bar */
+.omnibox-wrapper {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 34px;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0 8px;
+  gap: 8px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.omnibox-wrapper:focus-within {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+}
+
+.security-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.security-badge.secure {
+  color: var(--accent-green);
+}
+
+.security-badge.system {
+  color: var(--accent-cyan);
+}
+
+.omnibox-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 13.5px;
+  font-family: inherit;
+}
+
+.omnibox-input::placeholder {
+  color: var(--text-muted);
+}
+
+.omnibox-tools {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.omnibox-tool-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.omnibox-tool-btn:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* Loading Progress Bar */
+.loading-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2.5px;
+  background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
+  width: 0%;
+  transition: width 0.2s ease, opacity 0.3s;
+  z-index: 10;
+  opacity: 0;
+}
+
+.loading-bar.active {
+  opacity: 1;
+}
+
+/* Bookmarks Bar */
+.bookmarks-bar {
+  display: flex;
+  align-items: center;
+  height: var(--bookmark-height);
+  padding: 0 8px;
+  gap: 4px;
+  background-color: var(--bg-secondary);
+  border-top: 1px solid rgba(255, 255, 255, 0.03);
+  overflow-x: auto;
+  font-size: 12px;
+}
+
+.bookmarks-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.bookmark-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.bookmark-item:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.bookmark-item img {
+  width: 14px;
+  height: 14px;
+}
+
+/* Browser Content View Container */
+#views-container {
+  flex: 1;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: #ffffff;
+}
+
+webview {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: none;
+}
+
+webview.active {
+  display: flex;
+}
+
+/* Quick Dropdown Menu */
+.dropdown-menu {
+  position: absolute;
+  top: calc(var(--tab-height) + var(--nav-height) + 4px);
+  right: 8px;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-dropdown);
+  padding: 6px 0;
+  min-width: 220px;
+  z-index: 1000;
+  display: none;
+  backdrop-filter: blur(12px);
+}
+
+.dropdown-menu.visible {
+  display: block;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 14px;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background-color 0.12s;
+}
+
+.menu-item:hover {
+  background-color: var(--bg-hover);
+}
+
+.menu-item .shortcut {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.menu-divider {
+  height: 1px;
+  background-color: var(--border-color);
+  margin: 4px 0;
+}
+
+/* In-Page Search Bar (Ctrl+F) */
+.find-bar {
+  position: absolute;
+  top: 8px;
+  right: 20px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-dropdown);
+  display: none;
+  align-items: center;
+  padding: 4px 8px;
+  gap: 6px;
+  z-index: 500;
+}
+
+.find-bar.visible {
+  display: flex;
+}
+
+.find-input {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 4px 8px;
+  color: var(--text-primary);
+  font-size: 12px;
+  outline: none;
+}
+
+.find-count {
+  font-size: 11px;
+  color: var(--text-secondary);
+  min-width: 45px;
+}
+
+.find-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.find-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top-color: var(--accent-blue);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

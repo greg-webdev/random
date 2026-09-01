@@ -53,6 +53,21 @@ function queryDOMElements() {
     settingJavaPath: document.getElementById('setting-java-path'),
     settingJvmArgs: document.getElementById('setting-jvm-args'),
 
+    // Server Controls
+    btnStartServer: document.getElementById('btn-start-server'),
+    btnStopServer: document.getElementById('btn-stop-server'),
+    serverStatusBadge: document.getElementById('server-status-badge'),
+    btnOpenServerWeb: document.getElementById('btn-open-server-web'),
+    btnOpenServerFolder: document.getElementById('btn-open-server-folder'),
+    btnOpenServerMods: document.getElementById('btn-open-server-mods'),
+
+    // Proxy Controls
+    btnStartProxy: document.getElementById('btn-start-proxy'),
+    btnStopProxy: document.getElementById('btn-stop-proxy'),
+    proxyStatusBadge: document.getElementById('proxy-status-badge'),
+    proxyStatusDot: document.getElementById('proxy-status-dot'),
+    proxyStatusText: document.getElementById('proxy-status-text'),
+
     // Status Indicator
     connectionDot: document.getElementById('connection-dot'),
     connectionText: document.getElementById('connection-text')
@@ -159,6 +174,92 @@ function setupEventListeners() {
   if (elements.btnClearConsole) {
     elements.btnClearConsole.addEventListener('click', () => {
       elements.consoleTerminal.innerHTML = '<div class="log-line sys">[System] Console cleared.</div>';
+    });
+  }
+
+  // Server event listeners
+  if (elements.btnStartServer) {
+    elements.btnStartServer.addEventListener('click', async () => {
+      elements.btnStartServer.disabled = true;
+      try {
+        const res = await fetch('/api/server/start', { method: 'POST' });
+        const data = await res.json();
+        if (!data.success) {
+          alert(`Failed to start server: ${data.error}`);
+        }
+      } catch (err) {
+        alert(`Error starting server: ${err.message}`);
+      } finally {
+        elements.btnStartServer.disabled = false;
+      }
+    });
+  }
+
+  if (elements.btnStopServer) {
+    elements.btnStopServer.addEventListener('click', async () => {
+      elements.btnStopServer.disabled = true;
+      try {
+        await fetch('/api/server/stop', { method: 'POST' });
+      } catch (err) {
+        console.error(err);
+      } finally {
+        elements.btnStopServer.disabled = false;
+      }
+    });
+  }
+
+  if (elements.btnOpenServerWeb) {
+    elements.btnOpenServerWeb.addEventListener('click', () => {
+      window.open('http://localhost:3000', '_blank');
+    });
+  }
+
+  if (elements.btnOpenServerFolder) {
+    elements.btnOpenServerFolder.addEventListener('click', () => {
+      fetch('/api/instance/open-folder', { method: 'POST' });
+    });
+  }
+
+  if (elements.btnOpenServerMods) {
+    elements.btnOpenServerMods.addEventListener('click', () => {
+      fetch('/api/mods/open-folder', { method: 'POST' });
+    });
+  }
+
+  // Proxy Start & Kill event listeners
+  if (elements.btnStartProxy) {
+    elements.btnStartProxy.addEventListener('click', async () => {
+      elements.btnStartProxy.disabled = true;
+      try {
+        const res = await fetch('/api/proxy/start', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          updateProxyStatusUI(data.status);
+        } else {
+          alert('Failed to start proxy: ' + data.error);
+        }
+      } catch (err) {
+        alert('Error starting proxy: ' + err.message);
+      } finally {
+        elements.btnStartProxy.disabled = false;
+      }
+    });
+  }
+
+  if (elements.btnStopProxy) {
+    elements.btnStopProxy.addEventListener('click', async () => {
+      elements.btnStopProxy.disabled = true;
+      try {
+        const res = await fetch('/api/proxy/stop', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          updateProxyStatusUI(data.status);
+        }
+      } catch (err) {
+        alert('Error killing proxy: ' + err.message);
+      } finally {
+        elements.btnStopProxy.disabled = false;
+      }
     });
   }
 }
@@ -279,6 +380,10 @@ function connectWebSocket() {
       updateLaunchStatus(msg.data);
     } else if (msg.type === 'status') {
       updateGameStatus(msg.data);
+    } else if (msg.type === 'serverStatus') {
+      updateServerStatus(msg.data);
+    } else if (msg.type === 'proxyStatus') {
+      updateProxyStatusUI(msg.data);
     }
   };
 }
@@ -286,8 +391,69 @@ function connectWebSocket() {
 // Initial Data Loading
 async function fetchInitialData() {
   await fetchStatus();
+  await fetchServerStatus();
+  await fetchProxyStatus();
   await fetchMods();
   await fetchRoaming();
+}
+
+async function fetchProxyStatus() {
+  try {
+    const res = await fetch('/api/proxy/status');
+    const data = await res.json();
+    if (data.success) {
+      updateProxyStatusUI(data.status);
+    }
+  } catch (e) {}
+}
+
+function updateProxyStatusUI(status) {
+  if (!status) return;
+  const isRunning = status.running;
+  if (elements.proxyStatusBadge) {
+    elements.proxyStatusBadge.textContent = isRunning ? 'RUNNING' : 'STOPPED';
+    elements.proxyStatusBadge.style.color = isRunning ? '#4cd137' : '#ff4444';
+    elements.proxyStatusBadge.style.borderColor = isRunning ? '#4cd137' : '#ff4444';
+  }
+  if (elements.proxyStatusDot) {
+    elements.proxyStatusDot.style.background = isRunning ? '#4cd137' : '#ff4444';
+  }
+  if (elements.proxyStatusText) {
+    elements.proxyStatusText.textContent = isRunning
+      ? `Unified Proxy & Velocity Active (Port ${status.port})`
+      : 'Proxy & Velocity are Stopped';
+  }
+  if (elements.btnStartProxy) {
+    elements.btnStartProxy.style.display = isRunning ? 'none' : 'flex';
+  }
+  if (elements.btnStopProxy) {
+    elements.btnStopProxy.style.display = isRunning ? 'flex' : 'none';
+  }
+}
+
+async function fetchServerStatus() {
+  try {
+    const res = await fetch('/api/server/status');
+    const data = await res.json();
+    if (data.success) {
+      updateServerStatus(data.status);
+    }
+  } catch (e) {}
+}
+
+function updateServerStatus(status) {
+  if (!status) return;
+  if (elements.serverStatusBadge) {
+    elements.serverStatusBadge.textContent = status.online ? 'RUNNING' : 'OFFLINE';
+    elements.serverStatusBadge.style.color = status.online ? '#4cd137' : '#ff4444';
+    elements.serverStatusBadge.style.borderColor = status.online ? '#4cd137' : '#ff4444';
+  }
+  if (elements.btnStartServer) {
+    elements.btnStartServer.style.display = status.online ? 'none' : 'flex';
+  }
+  if (elements.btnStopServer) {
+    elements.btnStopServer.style.display = status.online ? 'flex' : 'none';
+  }
 }
 
 async function fetchStatus() {

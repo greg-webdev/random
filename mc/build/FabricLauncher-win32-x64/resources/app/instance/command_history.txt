@@ -1,0 +1,4 @@
+/time set da
+/time set day
+/gamerule advance_time false
+/give @a minecraft:debug_stick

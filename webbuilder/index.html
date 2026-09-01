@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GBuild | JSON to HTML Website Builder</title>
+    <meta name="description"
+        content="Turn JSON data and website schemas into clean, responsive, production-ready HTML code with live preview and one-click export.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="header-left">
+            <div class="header-titles">
+                <h1>GBuild</h1>
+                <p>Convert JSON schemas, UI trees, and datasets into instant HTML websites and code</p>
+            </div>
+        </div>
+
+        <div class="header-actions">
+            <select id="template-select" class="select-dropdown" title="Choose template preset">
+                <option value="all" selected>Template: All Elements Showcase</option>
+                <option value="landing">Template: SaaS Landing Page</option>
+                <option value="portfolio">Template: Developer Portfolio</option>
+                <option value="product">Template: Product and Pricing</option>
+                <option value="dashboard">Template: Modern Dashboard</option>
+                <option value="blog">Template: Blog Article</option>
+                <option value="domtree">Template: DOM Component Tree</option>
+                <option value="custom">Custom Blank / Raw JSON</option>
+            </select>
+
+            <!-- Custom Font Uploader -->
+            <label class="btn btn-secondary btn-sm font-upload-btn"
+                title="Upload custom font (.ttf, .otf, .woff, .woff2)">
+                <span>Upload Font</span>
+                <input type="file" id="font-upload" accept=".woff,.woff2,.ttf,.otf" style="display: none;">
+            </label>
+            <div id="active-font-badge" class="font-active-badge" style="display: none;">
+                <span id="font-name-display">CustomFont</span>
+                <button id="remove-font-btn" class="font-remove-btn" title="Remove custom font">x</button>
+            </div>
+
+            <button id="format-json-btn" class="btn btn-secondary btn-sm" title="Prettify and format JSON">
+                Format JSON
+            </button>
+            <button id="generate-btn" class="btn btn-primary" title="Generate HTML preview and code">
+                Generate HTML
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace Layout -->
+    <main class="main-layout">
+        <!-- Left Panel: JSON Input & Structure -->
+        <section class="panel input-panel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <span>JSON Input Schema</span>
+                </div>
+                <div class="panel-tools">
+                    <span id="json-char-count" class="badge">0 chars</span>
+                    <button id="clear-json-btn" class="btn btn-secondary btn-sm" title="Clear input">Clear</button>
+                </div>
+            </div>
+
+            <div class="panel-body">
+                <div class="editor-wrapper">
+                    <textarea id="json-input" spellcheck="false"
+                        placeholder="Paste your JSON schema, component tree, or data here..."></textarea>
+                </div>
+                <div id="error-banner" class="error-banner">
+                    <span id="error-message">Invalid JSON</span>
+                </div>
+            </div>
+
+            <div class="panel-footer">
+                <span>Tip: Press <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to generate instant HTML</span>
+                <span id="json-status" class="badge badge-success">Valid JSON</span>
+            </div>
+        </section>
+
+        <!-- Right Panel: Output Views (Live Preview & HTML Code) -->
+        <section class="panel output-panel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <!-- Tab Switcher -->
+                    <div class="tabs-nav">
+                        <button id="tab-preview-btn" class="tab-btn active" data-tab="preview">
+                            Live Preview
+                        </button>
+                        <button id="tab-code-btn" class="tab-btn" data-tab="code">
+                            HTML Code Output
+                        </button>
+                    </div>
+                </div>
+
+                <div class="panel-tools">
+                    <!-- Viewport toggles for Preview -->
+                    <div id="viewport-switcher" class="viewport-controls">
+                        <button class="viewport-btn active" data-viewport="desktop"
+                            title="Desktop View">Desktop</button>
+                        <button class="viewport-btn" data-viewport="tablet" title="Tablet View">Tablet</button>
+                        <button class="viewport-btn" data-viewport="mobile" title="Mobile View">Mobile</button>
+                    </div>
+
+                    <button id="copy-html-btn" class="btn btn-secondary btn-sm"
+                        title="Copy generated HTML to clipboard">
+                        Copy HTML
+                    </button>
+                    <button id="download-btn" class="btn btn-success btn-sm" title="Download standalone HTML file">
+                        Download .html
+                    </button>
+                    <button id="open-new-tab-btn" class="btn btn-secondary btn-sm" title="Open in new window">
+                        Open
+                    </button>
+                </div>
+            </div>
+
+            <div class="panel-body">
+                <!-- Tab 1: Live Interactive Iframe Preview -->
+                <div id="tab-preview" class="output-tab-content active">
+                    <div id="preview-container" class="preview-container viewport-desktop">
+                        <iframe id="preview-frame" title="Generated Website Preview"
+                            sandbox="allow-scripts allow-same-origin"></iframe>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Raw HTML Code Output -->
+                <div id="tab-code" class="output-tab-content">
+                    <div class="code-output-wrapper">
+                        <textarea id="html-output" readonly spellcheck="false"
+                            placeholder="Generated HTML markup code will appear here..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-footer">
+                <span id="output-meta">Generated HTML: Ready</span>
+                <span id="html-size-badge" class="badge">0 KB</span>
+            </div>
+        </section>
+    </main>
+
+    <!-- Floating Toast Notification -->
+    <div id="toast" class="toast">
+        <span id="toast-message">HTML Copied to clipboard!</span>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

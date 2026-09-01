@@ -1,0 +1,417 @@
+<Window x:Class="OreFinder.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:OreFinder"
+        xmlns:vm="clr-namespace:OreFinder.ViewModels"
+        mc:Ignorable="d"
+        Title="Minecraft 1.8 / 1.12 OreFinder - Accurate World Ore Generator"
+        Height="780" Width="1200"
+        MinHeight="650" MinWidth="1000"
+        Background="#0F1117"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.DataContext>
+        <vm:MainViewModel/>
+    </Window.DataContext>
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <local:ObjectToBoolConverter x:Key="ObjToBool"/>
+
+        <!-- Modern Dark Theme Styles -->
+        <SolidColorBrush x:Key="CardBackground" Color="#181B26"/>
+        <SolidColorBrush x:Key="CardBorder" Color="#2A2F45"/>
+        <SolidColorBrush x:Key="AccentCyan" Color="#38BDF8"/>
+        <SolidColorBrush x:Key="AccentGold" Color="#FACC15"/>
+        <SolidColorBrush x:Key="AccentIron" Color="#FB923C"/>
+        <SolidColorBrush x:Key="AccentGreen" Color="#10B981"/>
+        <SolidColorBrush x:Key="TextPrimary" Color="#F3F4F6"/>
+        <SolidColorBrush x:Key="TextSecondary" Color="#9CA3AF"/>
+
+        <Style TargetType="TextBox">
+            <Setter Property="Background" Value="#222738"/>
+            <Setter Property="Foreground" Value="#F3F4F6"/>
+            <Setter Property="BorderBrush" Value="#374151"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8,5"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+
+        <Style TargetType="ComboBox">
+            <Setter Property="Background" Value="#222738"/>
+            <Setter Property="Foreground" Value="#F3F4F6"/>
+            <Setter Property="BorderBrush" Value="#374151"/>
+            <Setter Property="Padding" Value="6,4"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+
+        <Style x:Key="PrimaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#2563EB"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Padding" Value="16,10"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#1D4ED8"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="border" Property="Background" Value="#374151"/>
+                                <Setter Property="Foreground" Value="#9CA3AF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SecondaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#2A3047"/>
+            <Setter Property="Foreground" Value="#E5E7EB"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#374151"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SummaryCard" TargetType="Border">
+            <Setter Property="Background" Value="#181B26"/>
+            <Setter Property="BorderBrush" Value="#2A2F45"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="12"/>
+            <Setter Property="Margin" Value="4"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/> <!-- Header -->
+            <RowDefinition Height="*"/>    <!-- Main Content -->
+            <RowDefinition Height="Auto"/> <!-- Status Bar -->
+        </Grid.RowDefinitions>
+
+        <!-- TOP HEADER -->
+        <Border Grid.Row="0" Background="#141722" BorderBrush="#2A2F45" BorderThickness="0,0,0,1" Padding="18,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="⛏️" FontSize="24" Margin="0,0,10,0"/>
+                    <StackPanel>
+                        <TextBlock Text="Minecraft OreFinder" Foreground="#F3F4F6" FontSize="18" FontWeight="Bold"/>
+                        <TextBlock Text="Bit-Exact Java 1.8 / 1.12 World Ore &amp; Vein Generator" Foreground="#9CA3AF" FontSize="11"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Quick Seed Presets -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Preset Seeds:" Foreground="#9CA3AF" VerticalAlignment="Center" Margin="0,0,8,0" FontSize="12"/>
+                    <Button Content="Speedrun 1" Style="{StaticResource SecondaryButton}" Margin="0,0,4,0" 
+                            Command="{Binding SelectPresetSeedCommand}" CommandParameter="4031384495743822299"/>
+                    <Button Content="Speedrun 2" Style="{StaticResource SecondaryButton}" Margin="0,0,4,0" 
+                            Command="{Binding SelectPresetSeedCommand}" CommandParameter="-130760432"/>
+                    <Button Content="Classic" Style="{StaticResource SecondaryButton}" Margin="0,0,4,0" 
+                            Command="{Binding SelectPresetSeedCommand}" CommandParameter="12345"/>
+                    <Button Content="🎲 Random" Style="{StaticResource SecondaryButton}" 
+                            Command="{Binding RandomSeedCommand}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- MAIN CONTENT AREA -->
+        <Grid Grid.Row="1" Margin="14">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="310"/> <!-- Left Sidebar Controls -->
+                <ColumnDefinition Width="*"/>   <!-- Results & Cards -->
+            </Grid.ColumnDefinitions>
+
+            <!-- LEFT SIDEBAR CONTROLS -->
+            <Border Grid.Column="0" Background="{StaticResource CardBackground}" BorderBrush="{StaticResource CardBorder}" BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,0,12,0">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <TextBlock Text="⚙️ World Parameters" Foreground="#F3F4F6" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,14"/>
+
+                        <!-- Seed Input -->
+                        <TextBlock Text="World Seed (Number or Text):" Foreground="#9CA3AF" FontSize="12" Margin="0,0,0,4"/>
+                        <TextBox Text="{Binding Seed, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
+
+                        <!-- Version Selector -->
+                        <TextBlock Text="Minecraft Version:" Foreground="#9CA3AF" FontSize="12" Margin="0,0,0,4"/>
+                        <ComboBox ItemsSource="{Binding AvailableVersions}" SelectedItem="{Binding Version}" Margin="0,0,0,12"/>
+
+                        <!-- Spawn Point Coordinates -->
+                        <TextBlock Text="Spawn / Search Center Point:" Foreground="#9CA3AF" FontSize="12" Margin="0,0,0,4"/>
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Margin="0,0,4,0">
+                                <TextBlock Text="X" Foreground="#6B7280" FontSize="10"/>
+                                <TextBox Text="{Binding SpawnX, UpdateSourceTrigger=PropertyChanged}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Margin="2,0,2,0">
+                                <TextBlock Text="Y" Foreground="#6B7280" FontSize="10"/>
+                                <TextBox Text="{Binding SpawnY, UpdateSourceTrigger=PropertyChanged}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Margin="4,0,0,0">
+                                <TextBlock Text="Z" Foreground="#6B7280" FontSize="10"/>
+                                <TextBox Text="{Binding SpawnZ, UpdateSourceTrigger=PropertyChanged}"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Search Radius -->
+                        <TextBlock Text="Search Chunk Radius:" Foreground="#9CA3AF" FontSize="12" Margin="0,0,0,2"/>
+                        <TextBlock Text="{Binding BlockRadiusText}" Foreground="#38BDF8" FontSize="11" Margin="0,0,0,4"/>
+                        <ComboBox ItemsSource="{Binding AvailableRadii}" SelectedItem="{Binding ChunkRadius}" Margin="0,0,0,12"/>
+
+                        <!-- Ore Type Filter -->
+                        <TextBlock Text="Filter Ore Type:" Foreground="#9CA3AF" FontSize="12" Margin="0,0,0,4"/>
+                        <ComboBox ItemsSource="{Binding AvailableFilters}" SelectedItem="{Binding SelectedFilter}" Margin="0,0,0,16"/>
+
+                        <!-- SCAN BUTTON -->
+                        <Button Content="🔍 Find Ores in World" 
+                                Style="{StaticResource PrimaryButton}" 
+                                Command="{Binding FindOresCommand}"
+                                Height="42" Margin="0,0,0,8"/>
+
+                        <Button Content="🛑 Cancel Scan" 
+                                Style="{StaticResource SecondaryButton}" 
+                                Command="{Binding CancelCommand}"
+                                IsEnabled="{Binding IsScanning}"
+                                Visibility="{Binding IsScanning, Converter={StaticResource BoolToVis}}"/>
+
+                        <!-- Algorithm Info Box -->
+                        <Border Background="#121520" BorderBrush="#252A3D" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,18,0,0">
+                            <StackPanel>
+                                <TextBlock Text="ℹ️ Exact Parity Engine" Foreground="#38BDF8" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <TextBlock Text="Calculates exact 1.8/1.12 chunk seeds using java.util.Random and replicates WorldGenMinable ellipsoid placement for 100% in-game accuracy." 
+                                           Foreground="#9CA3AF" FontSize="10" TextWrapping="Wrap" LineHeight="14"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- RIGHT CONTENT AREA -->
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/> <!-- Nearest Ore Summary Cards -->
+                    <RowDefinition Height="*"/>    <!-- DataGrid of Found Ores -->
+                </Grid.RowDefinitions>
+
+                <!-- NEAREST ORES SUMMARY CARDS -->
+                <Grid Grid.Row="0" Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- NEAREST DIAMOND CARD -->
+                    <Border Grid.Column="0" Style="{StaticResource SummaryCard}" BorderBrush="#0284C7">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="💎" FontSize="16" Margin="0,0,6,0"/>
+                                <TextBlock Text="Nearest Diamond" Foreground="#38BDF8" FontWeight="Bold" FontSize="12"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding Summary.ClosestDiamond.CoordsDisplay, TargetNullValue='No scan yet'}" 
+                                       Foreground="#F3F4F6" FontSize="13" FontWeight="SemiBold" Margin="0,6,0,2"/>
+                            <TextBlock Text="{Binding Summary.ClosestDiamond.DistanceDisplay, TargetNullValue='-'}" 
+                                       Foreground="#9CA3AF" FontSize="11"/>
+                            <TextBlock Text="{Binding Summary.ClosestDiamond.Direction, TargetNullValue=''}" 
+                                       Foreground="#38BDF8" FontSize="11" Margin="0,0,0,6"/>
+                            <Button Content="Copy /tp" Style="{StaticResource SecondaryButton}" 
+                                    Command="{Binding CopyTpCommand}" 
+                                    CommandParameter="{Binding Summary.ClosestDiamond.TpCommand}"
+                                    IsEnabled="{Binding Summary.ClosestDiamond, Converter={StaticResource ObjToBool}}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- NEAREST GOLD CARD -->
+                    <Border Grid.Column="1" Style="{StaticResource SummaryCard}" BorderBrush="#CA8A04">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🟡" FontSize="16" Margin="0,0,6,0"/>
+                                <TextBlock Text="Nearest Gold" Foreground="#FACC15" FontWeight="Bold" FontSize="12"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding Summary.ClosestGold.CoordsDisplay, TargetNullValue='No scan yet'}" 
+                                       Foreground="#F3F4F6" FontSize="13" FontWeight="SemiBold" Margin="0,6,0,2"/>
+                            <TextBlock Text="{Binding Summary.ClosestGold.DistanceDisplay, TargetNullValue='-'}" 
+                                       Foreground="#9CA3AF" FontSize="11"/>
+                            <TextBlock Text="{Binding Summary.ClosestGold.Direction, TargetNullValue=''}" 
+                                       Foreground="#FACC15" FontSize="11" Margin="0,0,0,6"/>
+                            <Button Content="Copy /tp" Style="{StaticResource SecondaryButton}" 
+                                    Command="{Binding CopyTpCommand}" 
+                                    CommandParameter="{Binding Summary.ClosestGold.TpCommand}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- NEAREST IRON CARD -->
+                    <Border Grid.Column="2" Style="{StaticResource SummaryCard}" BorderBrush="#EA580C">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="⚪" FontSize="16" Margin="0,0,6,0"/>
+                                <TextBlock Text="Nearest Iron" Foreground="#FB923C" FontWeight="Bold" FontSize="12"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding Summary.ClosestIron.CoordsDisplay, TargetNullValue='No scan yet'}" 
+                                       Foreground="#F3F4F6" FontSize="13" FontWeight="SemiBold" Margin="0,6,0,2"/>
+                            <TextBlock Text="{Binding Summary.ClosestIron.DistanceDisplay, TargetNullValue='-'}" 
+                                       Foreground="#9CA3AF" FontSize="11"/>
+                            <TextBlock Text="{Binding Summary.ClosestIron.Direction, TargetNullValue=''}" 
+                                       Foreground="#FB923C" FontSize="11" Margin="0,0,0,6"/>
+                            <Button Content="Copy /tp" Style="{StaticResource SecondaryButton}" 
+                                    Command="{Binding CopyTpCommand}" 
+                                    CommandParameter="{Binding Summary.ClosestIron.TpCommand}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- NEAREST LAPIS / REDSTONE CARD -->
+                    <Border Grid.Column="3" Style="{StaticResource SummaryCard}" BorderBrush="#2563EB">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🔵" FontSize="16" Margin="0,0,6,0"/>
+                                <TextBlock Text="Nearest Lapis" Foreground="#60A5FA" FontWeight="Bold" FontSize="12"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding Summary.ClosestLapis.CoordsDisplay, TargetNullValue='No scan yet'}" 
+                                       Foreground="#F3F4F6" FontSize="13" FontWeight="SemiBold" Margin="0,6,0,2"/>
+                            <TextBlock Text="{Binding Summary.ClosestLapis.DistanceDisplay, TargetNullValue='-'}" 
+                                       Foreground="#9CA3AF" FontSize="11"/>
+                            <TextBlock Text="{Binding Summary.ClosestLapis.Direction, TargetNullValue=''}" 
+                                       Foreground="#60A5FA" FontSize="11" Margin="0,0,0,6"/>
+                            <Button Content="Copy /tp" Style="{StaticResource SecondaryButton}" 
+                                    Command="{Binding CopyTpCommand}" 
+                                    CommandParameter="{Binding Summary.ClosestLapis.TpCommand}"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- DETAILED ORE RESULTS TABLE -->
+                <Border Grid.Row="1" Background="{StaticResource CardBackground}" BorderBrush="{StaticResource CardBorder}" BorderThickness="1" CornerRadius="8" Padding="12">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Table Header & Search Filter -->
+                        <Grid Grid.Row="0" Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="📊 Found Ore Veins" Foreground="#F3F4F6" FontWeight="Bold" FontSize="13"/>
+                                <TextBlock Text="{Binding FilteredOres.Count, StringFormat=' ({0} deposits)'}" Foreground="#9CA3AF" FontSize="12"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <TextBlock Text="Search:" Foreground="#9CA3AF" VerticalAlignment="Center" Margin="0,0,6,0" FontSize="12"/>
+                                <TextBox Text="{Binding SearchFilterText, UpdateSourceTrigger=PropertyChanged}" Width="160" Height="26"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- DataGrid -->
+                        <DataGrid Grid.Row="1" 
+                                  ItemsSource="{Binding FilteredOres}" 
+                                  SelectedItem="{Binding SelectedOre}"
+                                  AutoGenerateColumns="False" 
+                                  IsReadOnly="True"
+                                  CanUserSortColumns="True"
+                                  Background="#121520"
+                                  RowBackground="#181B26"
+                                  AlternatingRowBackground="#151824"
+                                  Foreground="#F3F4F6"
+                                  GridLinesVisibility="Horizontal"
+                                  HorizontalGridLinesBrush="#24293D"
+                                  BorderThickness="0"
+                                  HeadersVisibility="Column"
+                                  SelectionMode="Single"
+                                  FontSize="12">
+                            <DataGrid.ColumnHeaderStyle>
+                                <Style TargetType="DataGridColumnHeader">
+                                    <Setter Property="Background" Value="#1E2333"/>
+                                    <Setter Property="Foreground" Value="#9CA3AF"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="Padding" Value="8,6"/>
+                                    <Setter Property="BorderThickness" Value="0,0,1,1"/>
+                                    <Setter Property="BorderBrush" Value="#2A2F45"/>
+                                </Style>
+                            </DataGrid.ColumnHeaderStyle>
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Ore Type" Binding="{Binding OreName}" Width="130"/>
+                                <DataGridTextColumn Header="X" Binding="{Binding X}" Width="65"/>
+                                <DataGridTextColumn Header="Y (Depth)" Binding="{Binding Y}" Width="75"/>
+                                <DataGridTextColumn Header="Z" Binding="{Binding Z}" Width="65"/>
+                                <DataGridTextColumn Header="Chunk" Binding="{Binding ChunkX, StringFormat='[{0}, {1}]', Mode=OneWay}" Width="85"/>
+                                <DataGridTextColumn Header="Vein Size" Binding="{Binding VeinBlockCount}" Width="80"/>
+                                <DataGridTextColumn Header="Distance" Binding="{Binding DistanceDisplay}" Width="100"/>
+                                <DataGridTextColumn Header="Direction" Binding="{Binding Direction}" Width="130"/>
+                                <DataGridTemplateColumn Header="Action" Width="100">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="Copy /tp" 
+                                                    Style="{StaticResource SecondaryButton}" 
+                                                    Padding="6,2"
+                                                    Command="{Binding DataContext.CopyTpCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding TpCommand}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!-- BOTTOM STATUS BAR -->
+        <Border Grid.Row="2" Background="#141722" BorderBrush="#2A2F45" BorderThickness="0,1,0,0" Padding="14,6">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="150"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" Text="{Binding StatusMessage}" Foreground="#E5E7EB" FontSize="11" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                
+                <ProgressBar Grid.Column="1" Height="10" Value="{Binding Progress}" Maximum="100" 
+                             Visibility="{Binding IsScanning, Converter={StaticResource BoolToVis}}"
+                             Foreground="#38BDF8" Background="#222738" BorderThickness="0"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

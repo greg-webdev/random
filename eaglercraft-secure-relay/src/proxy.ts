@@ -100,14 +100,50 @@ export function startUnifiedProxy(proxyPort: number, mcTargetPort: number, relay
     }
   });
 
-  server.listen(proxyPort, () => {
-    console.log(`\n==================================================`);
-    console.log(`UNIFIED SECURE REVERSE PROXY RUNNING ON PORT ${proxyPort}`);
-    console.log(`==================================================`);
-    console.log(`Eaglercraft Minecraft Proxy: wss://localhost:${proxyPort}/`);
-    console.log(`Eaglercraft Relay Server:    wss://localhost:${proxyPort}/relay`);
-    console.log(`==================================================\n`);
-  });
+  function tryListen(retries = 3) {
+    server.listen(proxyPort, () => {
+      console.log(`\n==================================================`);
+      console.log(`UNIFIED SECURE REVERSE PROXY RUNNING ON PORT ${proxyPort}`);
+      console.log(`==================================================`);
+      console.log(`Eaglercraft Minecraft Proxy: wss://localhost:${proxyPort}/`);
+      console.log(`Eaglercraft Relay Server:    wss://localhost:${proxyPort}/relay`);
+      console.log(`==================================================\n`);
+    });
+
+    server.on('error', (err: any) => {
+      if (err.code === 'EADDRINUSE') {
+        console.warn(`[Proxy] Port ${proxyPort} is in use. Attempting to free it...`);
+        try {
+          const { execSync } = require('child_process');
+          if (process.platform === 'win32') {
+            const out = execSync(
+              `powershell -NoProfile -Command "(Get-NetTCPConnection -LocalPort ${proxyPort} -ErrorAction SilentlyContinue).OwningProcess"`,
+              { encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] }
+            ) as string;
+            const pids = out.trim().split(/\r?\n/).map((p: string) => p.trim()).filter((p: string) => /^\d+$/.test(p) && p !== '0' && p !== String(process.pid));
+            for (const pid of pids) {
+              try { execSync(`taskkill /F /PID ${pid}`, { stdio: 'ignore' }); } catch (_) {}
+            }
+          } else {
+            execSync(`fuser -k ${proxyPort}/tcp 2>/dev/null || true`);
+          }
+        } catch (_) {}
+        if (retries > 0) {
+          console.log(`[Proxy] Retrying in 2 seconds... (${retries} attempts left)`);
+          server.removeAllListeners('error');
+          server.close();
+          setTimeout(() => tryListen(retries - 1), 2000);
+        } else {
+          console.error(`[Proxy] Could not bind to port ${proxyPort} after multiple attempts.`);
+          process.exit(1);
+        }
+      } else {
+        throw err;
+      }
+    });
+  }
+
+  tryListen();
 }
 
 // If run directly

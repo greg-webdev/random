@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "ollama-agent": {
+      "command": "node",
+      "args": ["dist/mcpServer.js"],
+      "env": {
+        "OLLAMA_HOST": "http://127.0.0.1:11434"
+      }
+    }
+  }
+}

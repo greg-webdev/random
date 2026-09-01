@@ -1,17 +1,21 @@
-# Files exceeding GitHub's 100MB limit
-mcs/MinecraftServerControlPanel.exe
-crazysheep/CrazyCattle3D.exe
-crazysheep/Godot_v4.4-stable_win64.exe
+# Dependencies & Package Managers
+**/node_modules/
+**/.gradle/
+**/.esphome/
 
-# Godot editor cache
-.godot/editor/
+# Build outputs & caches
+**/.godot/editor/
+**/bin/Debug/
+**/bin/Release/
+**/obj/
 
-# Runtime locks
+# Runtime locks & logs
+*.log
+*.log.gz
+*.lock
 mcs/world/session.lock
 
-*.exe
-*.jar
-*.pkg
-*.rar
-
+# OS & Editor files
+.DS_Store
+Thumbs.db
 worker.js

@@ -259,9 +259,84 @@
       </section>
 
       <!-- Server View -->
-      <section class="tab-view" id="tab-server" style="padding: 0; height: 100vh;">
-        <div style="width: 100%; height: 100%; overflow: hidden; background: #0b0f19;">
-          <iframe id="server-iframe" src="about:blank" style="width: 100%; height: 100%; border: none;"></iframe>
+      <section class="tab-view" id="tab-server">
+        <div class="view-header">
+          <div>
+            <h1>FABRIC MINECRAFT SERVER 1.21.11</h1>
+            <p>Direct local server controls and management.</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-secondary" id="btn-open-server-web">Open in Browser (Port 3000)</button>
+          </div>
+        </div>
+
+        <div class="dashboard-grid" style="margin-top: 1.5rem;">
+          <!-- Server Control Card -->
+          <div class="card play-card">
+            <div class="card-header">
+              <h2>SERVER CONTROLS</h2>
+              <span class="badge" id="server-status-badge">OFFLINE</span>
+            </div>
+
+            <div style="margin: 1.5rem 0;">
+              <div style="font-family: 'Fira Code', monospace; color: #aaaaaa; font-size: 0.85rem; margin-bottom: 0.5rem;">
+                Target: <span style="color: #ffffff;">Fabric 1.21.11 (Java 21)</span>
+              </div>
+              <div style="font-family: 'Fira Code', monospace; color: #aaaaaa; font-size: 0.85rem; margin-bottom: 0.5rem;">
+                Server Port: <span style="color: #ffffff;">25565</span> (Offline Mode: enabled)
+              </div>
+              <div style="font-family: 'Fira Code', monospace; color: #aaaaaa; font-size: 0.85rem;">
+                Eaglercraft Port: <span style="color: #ffffff;">8608</span> (Via Velocity Proxy)
+              </div>
+            </div>
+
+            <div class="action-buttons" style="margin-top: 1.5rem;">
+              <button class="btn btn-primary" id="btn-start-server" style="background: #ffffff; color: #000000; font-weight: 800;">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+                <span>START SERVER</span>
+              </button>
+              <button class="btn btn-danger" id="btn-stop-server" style="display: none;">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="6" y="6" width="12" height="12"></rect>
+                </svg>
+                <span>STOP SERVER</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Server Quick Info Card -->
+          <div class="card quick-info-card">
+            <div class="card-header">
+              <h2>SERVER DIRECTORY</h2>
+            </div>
+            <div class="quick-links">
+              <button class="btn btn-secondary" id="btn-open-server-folder">
+                <span>Open mcserver Folder</span>
+              </button>
+              <button class="btn btn-secondary" id="btn-open-server-mods">
+                <span>Open Server mods Folder</span>
+              </button>
+            </div>
+            <div class="info-list" style="margin-top: 1rem;">
+              <div class="info-item">
+                <span class="info-label">Path:</span>
+                <span class="info-val truncate" id="server-path-label">C:\Users\geg\Documents\mcserver</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Embedded Web Panel Section -->
+        <div style="margin-top: 2rem; background: #0a0a0a; border: 1px solid #333333; padding: 1.2rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
+            <h3 style="font-size: 0.95rem; color: #ffffff; letter-spacing: 0.5px;">LIVE 3D MAP & CONTROL PANEL</h3>
+            <span style="font-size: 0.8rem; color: #888888; font-family: monospace;">http://localhost:3000</span>
+          </div>
+          <div style="width: 100%; height: 500px; overflow: hidden; background: #000000; border: 1px solid #222222;">
+            <iframe id="server-iframe" src="about:blank" style="width: 100%; height: 100%; border: none;"></iframe>
+          </div>
         </div>
       </section>
 
@@ -270,31 +345,48 @@
         <div class="view-header">
           <div>
             <h1>EAGLER CONGESTION PROXY</h1>
-            <p>Unified secure proxy running on WSS port 8608 bypasses local firewalls.</p>
+            <p>Unified secure reverse proxy and singleplayer relay.</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-primary" id="btn-start-proxy" style="background: #ffffff; color: #000000; font-weight: 800; display: none;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              <span>START PROXY</span>
+            </button>
+            <button class="btn btn-danger" id="btn-stop-proxy">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="6" y="6" width="12" height="12"></rect>
+              </svg>
+              <span>KILL PROXY</span>
+            </button>
           </div>
         </div>
 
-        <div class="card" style="margin-top: 1.5rem; background: #15151c; border: 1px solid #2a2a35; padding: 2rem;">
-          <h2 style="color: #ffa801; font-size: 1.4rem; margin-bottom: 1rem;">STATUS & ENDPOINTS</h2>
+        <div class="card" style="margin-top: 1.5rem; background: #0a0a0a; border: 1px solid #333333; padding: 2rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid #222222; padding-bottom: 1rem;">
+            <h2 style="color: #ffffff; font-size: 1.2rem; margin: 0;">STATUS & ENDPOINTS</h2>
+            <span class="badge" id="proxy-status-badge" style="color: #4cd137; border-color: #4cd137;">RUNNING</span>
+          </div>
           
-          <div style="margin: 1.5rem 0;">
+          <div>
             <div style="display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1.5rem;">
-              <div style="width: 12px; height: 12px; border-radius: 50%; background: #4cd137; box-shadow: 0 0 10px #4cd137;"></div>
-              <span style="font-weight: bold; font-size: 1.1rem; color: #f4f4f9;">Proxy Backend is Active</span>
+              <div id="proxy-status-dot" style="width: 10px; height: 10px; border-radius: 0; background: #4cd137;"></div>
+              <span id="proxy-status-text" style="font-weight: 600; font-size: 1rem; color: #ffffff;">Unified Proxy & Velocity Active</span>
             </div>
             
-            <div style="background: #0b0f19; padding: 1.2rem; border-radius: 6px; font-family: 'Fira Code', monospace; margin: 1rem 0; border: 1px solid #1e1e28;">
-              <span style="color: #00d2d3;">Minecraft Server WSS Endpoint:</span><br>
-              <span style="color: #ffa801; font-size: 1.1rem; word-break: break-all;">wss://localhost:8608/</span>
+            <div style="background: #000000; padding: 1.2rem; font-family: 'Fira Code', monospace; margin: 1rem 0; border: 1px solid #222222;">
+              <span style="color: #888888;">Minecraft Server WSS Endpoint:</span><br>
+              <span id="proxy-mc-endpoint" style="color: #ffffff; font-size: 1.05rem; word-break: break-all;">wss://localhost:8608/</span>
             </div>
 
-            <div style="background: #0b0f19; padding: 1.2rem; border-radius: 6px; font-family: 'Fira Code', monospace; margin: 1rem 0; border: 1px solid #1e1e28;">
-              <span style="color: #00d2d3;">Singleplayer LAN Relay WSS Endpoint:</span><br>
-              <span style="color: #ffa801; font-size: 1.1rem; word-break: break-all;">wss://localhost:8608/relay</span>
+            <div style="background: #000000; padding: 1.2rem; font-family: 'Fira Code', monospace; margin: 1rem 0; border: 1px solid #222222;">
+              <span style="color: #888888;">Singleplayer LAN Relay WSS Endpoint:</span><br>
+              <span id="proxy-relay-endpoint" style="color: #ffffff; font-size: 1.05rem; word-break: break-all;">wss://localhost:8608/relay</span>
             </div>
           </div>
 
-          <p style="color: #a4b0be; line-height: 1.6; margin-top: 2rem;">
+          <p style="color: #888888; line-height: 1.6; margin-top: 1.5rem; font-size: 0.85rem;">
             Both connections route natively through port 8608. If your network (like Fortinet) blocks port 8608, you can launch the app with Administrator privileges on port 443 to override it!
           </p>
         </div>

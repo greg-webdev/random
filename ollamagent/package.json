@@ -1,0 +1,245 @@
+{
+  "name": "ollamagent",
+  "displayName": "Ollama Agent for Antigravity IDE",
+  "description": "Autonomous AI Agent and Coding Assistant powered by local Ollama models for Antigravity IDE",
+  "version": "1.0.0",
+  "publisher": "ollamagent",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "AI",
+    "Chat",
+    "Programming Languages",
+    "Machine Learning"
+  ],
+  "keywords": [
+    "ollama",
+    "agent",
+    "ai",
+    "antigravity",
+    "llm",
+    "coding assistant",
+    "local ai",
+    "llama3",
+    "qwen",
+    "gemma"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onView:ollamagent.chatView",
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "ollamagent-sidebar",
+          "title": "Ollama Agent",
+          "icon": "resources/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "ollamagent-sidebar": [
+        {
+          "type": "webview",
+          "id": "ollamagent.chatView",
+          "name": "Ollama Agent",
+          "icon": "resources/icon.svg",
+          "contextualTitle": "Ollama AI Agent"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "ollamagent.openChat",
+        "title": "Ollama Agent: Open Chat Panel",
+        "category": "Ollama Agent"
+      },
+      {
+        "command": "ollamagent.newChat",
+        "title": "Ollama Agent: Start New Session",
+        "category": "Ollama Agent",
+        "icon": "$(add)"
+      },
+      {
+        "command": "ollamagent.selectModel",
+        "title": "Ollama Agent: Switch Ollama Model",
+        "category": "Ollama Agent",
+        "icon": "$(symbol-constant)"
+      },
+      {
+        "command": "ollamagent.refreshModels",
+        "title": "Ollama Agent: Refresh Available Models",
+        "category": "Ollama Agent",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "ollamagent.explainCode",
+        "title": "Ollama Agent: Explain Selected Code",
+        "category": "Ollama Agent"
+      },
+      {
+        "command": "ollamagent.refactorCode",
+        "title": "Ollama Agent: Refactor Selected Code",
+        "category": "Ollama Agent"
+      },
+      {
+        "command": "ollamagent.generateTests",
+        "title": "Ollama Agent: Generate Unit Tests",
+        "category": "Ollama Agent"
+      },
+      {
+        "command": "ollamagent.saveChat",
+        "title": "Ollama Agent: Save Current Session",
+        "category": "Ollama Agent",
+        "icon": "$(save)"
+      },
+      {
+        "command": "ollamagent.exportChat",
+        "title": "Ollama Agent: Export Chat to File (.md / .json)",
+        "category": "Ollama Agent",
+        "icon": "$(export)"
+      },
+      {
+        "command": "ollamagent.fixDiagnostics",
+        "title": "Ollama Agent: Fix Diagnostic Errors in Selection",
+        "category": "Ollama Agent"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "submenu": "ollamagent.contextMenu",
+          "group": "1_modification"
+        }
+      ],
+      "ollamagent.contextMenu": [
+        {
+          "command": "ollamagent.explainCode",
+          "when": "editorHasSelection"
+        },
+        {
+          "command": "ollamagent.refactorCode",
+          "when": "editorHasSelection"
+        },
+        {
+          "command": "ollamagent.generateTests",
+          "when": "editorHasSelection"
+        },
+        {
+          "command": "ollamagent.fixDiagnostics",
+          "when": "editorHasSelection"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "ollamagent.openChat",
+          "when": "view == ollamagent.chatView",
+          "group": "navigation"
+        },
+        {
+          "command": "ollamagent.newChat",
+          "when": "view == ollamagent.chatView",
+          "group": "navigation"
+        },
+        {
+          "command": "ollamagent.selectModel",
+          "when": "view == ollamagent.chatView",
+          "group": "navigation"
+        },
+        {
+          "command": "ollamagent.refreshModels",
+          "when": "view == ollamagent.chatView",
+          "group": "navigation"
+        }
+      ],
+      "statusbar/item/context": [
+        {
+          "command": "ollamagent.openChat",
+          "group": "1_open"
+        },
+        {
+          "command": "ollamagent.newChat",
+          "group": "2_chat"
+        },
+        {
+          "command": "ollamagent.selectModel",
+          "group": "3_model"
+        },
+        {
+          "command": "ollamagent.refreshModels",
+          "group": "4_refresh"
+        }
+      ]
+    },
+    "submenus": [
+      {
+        "id": "ollamagent.contextMenu",
+        "label": "Ollama Agent"
+      }
+    ],
+    "configuration": {
+      "title": "Ollama Agent",
+      "properties": {
+        "ollamagent.endpoint": {
+          "type": "string",
+          "default": "http://127.0.0.1:11434",
+          "description": "URL of the Ollama server instance."
+        },
+        "ollamagent.model": {
+          "type": "string",
+          "default": "llama3.1:latest",
+          "description": "Default Ollama model to use for agent interactions."
+        },
+        "ollamagent.temperature": {
+          "type": "number",
+          "default": 0.2,
+          "minimum": 0.0,
+          "maximum": 2.0,
+          "description": "Sampling temperature for model generation (lower is more deterministic)."
+        },
+        "ollamagent.autonomousMode": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable autonomous multi-step tool execution (file edits, bash execution, workspace queries)."
+        },
+        "ollamagent.autoApproveReadOnly": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically approve read-only tools (reading files, searching, listing directories)."
+        },
+        "ollamagent.systemPrompt": {
+          "type": "string",
+          "default": "",
+          "description": "Custom system prompt overrides for the Ollama Agent."
+        },
+        "ollamagent.contextWindow": {
+          "type": "number",
+          "default": 16384,
+          "description": "Context window size (num_ctx) sent to Ollama (default: 16384)."
+        },
+        "ollamagent.maxTokens": {
+          "type": "number",
+          "default": -1,
+          "description": "Maximum tokens to predict (num_predict). -1 means unlimited (no cutoff)."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "bundle": "node esbuild.js",
+    "build": "node esbuild.js --production",
+    "mcp": "node dist/mcpServer.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.0",
+    "@types/vscode": "^1.85.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.7.3"
+  }
+}

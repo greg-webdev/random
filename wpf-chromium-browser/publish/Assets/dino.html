@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chrome Dino Game</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: monospace;
+      background: #1a1c23;
+      color: #f3f4f6;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+    h1 {
+      font-size: 20px;
+      margin-bottom: 8px;
+      color: #38bdf8;
+    }
+    p {
+      color: #9ca3af;
+      margin-bottom: 20px;
+      font-size: 13px;
+    }
+    #game-canvas {
+      background: #252834;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+    .score-board {
+      margin-top: 15px;
+      font-size: 16px;
+      color: #60a5fa;
+    }
+  </style>
+</head>
+<body>
+  <h1>Chromium Dino Runner (chrome://dino)</h1>
+  <p>Press <b>SPACE</b> or <b>UP ARROW</b> or <b>CLICK</b> to jump!</p>
+
+  <canvas id="game-canvas" width="640" height="200"></canvas>
+  <div class="score-board">Score: <span id="score">0</span> | High Score: <span id="high-score">0</span></div>
+
+  <script>
+    const canvas = document.getElementById('game-canvas');
+    const ctx = canvas.getContext('2d');
+    const scoreEl = document.getElementById('score');
+    const highScoreEl = document.getElementById('high-score');
+
+    let highScore = 0;
+    let score = 0;
+    let gameOver = false;
+    let speed = 5;
+
+    const dino = {
+      x: 50,
+      y: 140,
+      width: 24,
+      height: 32,
+      dy: 0,
+      gravity: 0.6,
+      jumpForce: -10.5,
+      isGrounded: true
+    };
+
+    let obstacles = [];
+    let frame = 0;
+
+    function jump() {
+      if (gameOver) {
+        resetGame();
+        return;
+      }
+      if (dino.isGrounded) {
+        dino.dy = dino.jumpForce;
+        dino.isGrounded = false;
+      }
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' || e.code === 'ArrowUp') {
+        e.preventDefault();
+        jump();
+      }
+    });
+    canvas.addEventListener('click', jump);
+
+    function resetGame() {
+      score = 0;
+      speed = 5;
+      obstacles = [];
+      dino.y = 140;
+      dino.dy = 0;
+      dino.isGrounded = true;
+      gameOver = false;
+      frame = 0;
+      loop();
+    }
+
+    function update() {
+      if (gameOver) return;
+
+      frame++;
+      score++;
+      if (score % 200 === 0) speed += 0.5;
+      scoreEl.innerText = Math.floor(score / 5);
+
+      // Dino physics
+      dino.dy += dino.gravity;
+      dino.y += dino.dy;
+
+      if (dino.y >= 140) {
+        dino.y = 140;
+        dino.dy = 0;
+        dino.isGrounded = true;
+      }
+
+      // Obstacles spawn
+      if (frame % Math.floor(100 - speed * 3) === 0) {
+        const height = Math.random() > 0.5 ? 28 : 36;
+        obstacles.push({
+          x: canvas.width,
+          y: 172 - height,
+          width: 16,
+          height: height
+        });
+      }
+
+      // Obstacles move
+      for (let i = 0; i < obstacles.length; i++) {
+        const ob = obstacles[i];
+        ob.x -= speed;
+
+        // Collision detection
+        if (
+          dino.x < ob.x + ob.width &&
+          dino.x + dino.width > ob.x &&
+          dino.y < ob.y + ob.height &&
+          dino.y + dino.height > ob.y
+        ) {
+          gameOver = true;
+          const finalScore = Math.floor(score / 5);
+          if (finalScore > highScore) {
+            highScore = finalScore;
+            highScoreEl.innerText = highScore;
+          }
+        }
+      }
+
+      // Remove offscreen
+      obstacles = obstacles.filter(ob => ob.x + ob.width > 0);
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw Ground
+      ctx.strokeStyle = '#4b5563';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, 172);
+      ctx.lineTo(canvas.width, 172);
+      ctx.stroke();
+
+      // Draw Dino (Stylized Blocky T-Rex)
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(dino.x, dino.y, dino.width, dino.height);
+      // Eye
+      ctx.fillStyle = '#1e222d';
+      ctx.fillRect(dino.x + 14, dino.y + 4, 4, 4);
+
+      // Draw Obstacles (Cacti)
+      ctx.fillStyle = '#10b981';
+      for (const ob of obstacles) {
+        ctx.fillRect(ob.x, ob.y, ob.width, ob.height);
+      }
+
+      if (gameOver) {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.fillStyle = '#f87171';
+        ctx.font = 'bold 20px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('G A M E   O V E R', canvas.width / 2, 90);
+
+        ctx.fillStyle = '#e5e7eb';
+        ctx.font = '14px monospace';
+        ctx.fillText('Press SPACE or Click to Restart', canvas.width / 2, 120);
+      }
+    }
+
+    function loop() {
+      update();
+      draw();
+      if (!gameOver) requestAnimationFrame(loop);
+    }
+
+    loop();
+  </script>
+</body>
+</html>

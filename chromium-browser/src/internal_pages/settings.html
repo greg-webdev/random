@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Settings</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #1a1c23;
+      color: #e5e7eb;
+      padding: 30px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 24px;
+      color: #38bdf8;
+      margin-bottom: 24px;
+    }
+    .section-card {
+      background: #252834;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .section-header {
+      font-size: 16px;
+      font-weight: 600;
+      color: #f3f4f6;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .setting-row:last-child {
+      border-bottom: none;
+    }
+    .setting-label {
+      font-size: 14px;
+      color: #e5e7eb;
+    }
+    .setting-desc {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-top: 2px;
+    }
+    select, input[type="text"] {
+      background: #1a1c23;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      padding: 6px 12px;
+      color: #f3f4f6;
+      font-size: 13px;
+      outline: none;
+    }
+    select:focus, input[type="text"]:focus {
+      border-color: #3b82f6;
+    }
+    .save-alert {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #10b981;
+      color: #ffffff;
+      padding: 10px 20px;
+      border-radius: 8px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      display: none;
+      font-size: 13px;
+      animation: fadeIn 0.2s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Browser Settings</h1>
+
+    <!-- Search Engine -->
+    <div class="section-card">
+      <div class="section-header">🔍 Search Engine</div>
+      <div class="setting-row">
+        <div>
+          <div class="setting-label">Default Search Engine</div>
+          <div class="setting-desc">Search engine used when entering queries in the address bar</div>
+        </div>
+        <select id="search-engine-select">
+          <option value="google">Google</option>
+          <option value="duckduckgo">DuckDuckGo</option>
+          <option value="bing">Bing</option>
+          <option value="brave">Brave Search</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- On Startup -->
+    <div class="section-card">
+      <div class="section-header">🏠 Startup & Homepage</div>
+      <div class="setting-row">
+        <div>
+          <div class="setting-label">Homepage URL</div>
+          <div class="setting-desc">Page opened when clicking the Home button or new tab</div>
+        </div>
+        <input type="text" id="homepage-input" value="chrome://newtab" style="width: 240px;" />
+      </div>
+    </div>
+
+    <!-- Appearance -->
+    <div class="section-card">
+      <div class="section-header">🎨 Appearance</div>
+      <div class="setting-row">
+        <div>
+          <div class="setting-label">Color Theme</div>
+          <div class="setting-desc">Overall interface accent and backdrop styling</div>
+        </div>
+        <select id="theme-select">
+          <option value="dark">Dark Theme (Default)</option>
+          <option value="light">Light Theme</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <div>
+          <div class="setting-label">Default Page Zoom</div>
+          <div class="setting-desc">Default magnification level for loaded websites</div>
+        </div>
+        <select id="zoom-select">
+          <option value="0.8">80%</option>
+          <option value="1.0" selected>100%</option>
+          <option value="1.25">125%</option>
+          <option value="1.5">150%</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div id="save-alert" class="save-alert">Settings Saved!</div>
+
+  <script>
+    let currentSettings = {
+      searchEngine: 'google',
+      homePage: 'chrome://newtab',
+      theme: 'dark',
+      defaultZoom: 1.0
+    };
+
+    const alertBox = document.getElementById('save-alert');
+    function showNotification() {
+      alertBox.style.display = 'block';
+      setTimeout(() => { alertBox.style.display = 'none'; }, 2000);
+    }
+
+    async function loadSettings() {
+      if (window.parent && window.parent.browserAPI) {
+        currentSettings = await window.parent.browserAPI.getSettings();
+      }
+      document.getElementById('search-engine-select').value = currentSettings.searchEngine || 'google';
+      document.getElementById('homepage-input').value = currentSettings.homePage || 'chrome://newtab';
+      document.getElementById('theme-select').value = currentSettings.theme || 'dark';
+      document.getElementById('zoom-select').value = (currentSettings.defaultZoom || 1.0).toString();
+    }
+
+    async function save() {
+      currentSettings.searchEngine = document.getElementById('search-engine-select').value;
+      currentSettings.homePage = document.getElementById('homepage-input').value.trim() || 'chrome://newtab';
+      currentSettings.theme = document.getElementById('theme-select').value;
+      currentSettings.defaultZoom = parseFloat(document.getElementById('zoom-select').value);
+
+      if (window.parent && window.parent.browserAPI) {
+        await window.parent.browserAPI.saveSettings(currentSettings);
+      }
+      showNotification();
+    }
+
+    document.getElementById('search-engine-select').addEventListener('change', save);
+    document.getElementById('theme-select').addEventListener('change', save);
+    document.getElementById('zoom-select').addEventListener('change', save);
+    document.getElementById('homepage-input').addEventListener('blur', save);
+
+    loadSettings();
+  </script>
+</body>
+</html>

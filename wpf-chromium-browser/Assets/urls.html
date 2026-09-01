@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chrome URLs</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #1a1c23;
+      color: #e5e7eb;
+      padding: 40px;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 26px;
+      margin-bottom: 8px;
+      color: #38bdf8;
+    }
+    p.subtitle {
+      color: #9ca3af;
+      margin-bottom: 28px;
+      font-size: 14px;
+    }
+    .section-title {
+      font-size: 18px;
+      color: #60a5fa;
+      margin: 24px 0 12px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 6px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+    }
+    .url-card {
+      background: #252834;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 12px 16px;
+      text-decoration: none;
+      color: #f3f4f6;
+      transition: all 0.15s;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .url-card:hover {
+      background: #323746;
+      border-color: #3b82f6;
+      transform: translateY(-2px);
+    }
+    .url-title {
+      font-weight: 600;
+      font-size: 14px;
+      color: #60a5fa;
+      font-family: monospace;
+    }
+    .url-desc {
+      font-size: 12px;
+      color: #9ca3af;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>List of Chrome URLs</h1>
+    <p class="subtitle">Available internal browser pages and Chromium diagnostic utilities</p>
+
+    <div class="section-title">Browser Pages</div>
+    <div class="grid">
+      <a class="url-card" href="chrome://newtab">
+        <span class="url-title">chrome://newtab</span>
+        <span class="url-desc">Default start page with search and shortcuts</span>
+      </a>
+      <a class="url-card" href="chrome://version">
+        <span class="url-title">chrome://version</span>
+        <span class="url-desc">Engine, V8, Node and Chromium versions</span>
+      </a>
+      <a class="url-card" href="chrome://history">
+        <span class="url-title">chrome://history</span>
+        <span class="url-desc">View and search browsing history</span>
+      </a>
+      <a class="url-card" href="chrome://bookmarks">
+        <span class="url-title">chrome://bookmarks</span>
+        <span class="url-desc">Manage saved bookmarks</span>
+      </a>
+      <a class="url-card" href="chrome://downloads">
+        <span class="url-title">chrome://downloads</span>
+        <span class="url-desc">Download manager and active tasks</span>
+      </a>
+      <a class="url-card" href="chrome://settings">
+        <span class="url-title">chrome://settings</span>
+        <span class="url-desc">Browser preferences, search engine, theme</span>
+      </a>
+      <a class="url-card" href="chrome://dino">
+        <span class="url-title">chrome://dino</span>
+        <span class="url-desc">The famous Chromium T-Rex endless runner</span>
+      </a>
+      <a class="url-card" href="chrome://about">
+        <span class="url-title">chrome://about</span>
+        <span class="url-desc">This overview index page</span>
+      </a>
+    </div>
+
+    <div class="section-title">Chromium Internals & Debug</div>
+    <div class="grid">
+      <a class="url-card" href="chrome://gpu">
+        <span class="url-title">chrome://gpu</span>
+        <span class="url-desc">Hardware acceleration & graphics diagnostics</span>
+      </a>
+      <a class="url-card" href="chrome://net-internals">
+        <span class="url-title">chrome://net-internals</span>
+        <span class="url-desc">Chromium network stack and socket monitor</span>
+      </a>
+      <a class="url-card" href="chrome://webrtc-internals">
+        <span class="url-title">chrome://webrtc-internals</span>
+        <span class="url-desc">Real-time WebRTC audio/video stream stats</span>
+      </a>
+      <a class="url-card" href="chrome://media-internals">
+        <span class="url-title">chrome://media-internals</span>
+        <span class="url-desc">Chromium audio and video player pipeline</span>
+      </a>
+      <a class="url-card" href="chrome://process-internals">
+        <span class="url-title">chrome://process-internals</span>
+        <span class="url-desc">Renderer process isolation and site instances</span>
+      </a>
+      <a class="url-card" href="chrome://blob-internals">
+        <span class="url-title">chrome://blob-internals</span>
+        <span class="url-desc">In-memory blob storage inspection</span>
+      </a>
+    </div>
+  </div>
+</body>
+</html>

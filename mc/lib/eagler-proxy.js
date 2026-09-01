@@ -1,4 +1,4 @@
-const { spawn } = require('child_process');
+const { spawn, execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
@@ -31,6 +31,30 @@ const VIAVERSION_URL = 'https://github.com/ViaVersion/ViaVersion/releases/downlo
 const VIABACKWARDS_URL = 'https://github.com/ViaVersion/ViaBackwards/releases/download/5.11.0/ViaBackwards-5.11.0.jar';
 const VIAREWIND_URL = 'https://cdn.modrinth.com/data/TbHIxhx5/versions/r9d7WsYA/ViaRewind-4.1.3.jar';
 const EAGLER_PLUGIN_URL = 'https://github.com/lax1dude/eaglerxserver/releases/download/v1.1.1/EaglerXServer.jar';
+
+let relayProcess = null;
+let velocityProcess = null;
+let unifiedProxyServer = null;
+
+function getJava21Executable() {
+  const java21 = 'C:\\Program Files\\Java\\jdk-21\\bin\\java.exe';
+  return fs.existsSync(java21) ? java21 : 'java';
+}
+
+function killOrphanedJavaProcess(pattern) {
+  try {
+    if (process.platform === 'win32') {
+      execSync(`wmic process where "name='java.exe' and commandline like '%${pattern}%'" call terminate`, { stdio: 'ignore' });
+    }
+  } catch (e) {}
+}
+
+function getProxyStatus() {
+  return {
+    running: unifiedProxyServer !== null && velocityProcess !== null,
+    port: process.env.PORT ? parseInt(process.env.PORT, 10) : VELOCITY_PROXY_PORT
+  };
+}
 
 function downloadFile(url, dest) {
   return new Promise((resolve, reject) => {
@@ -138,7 +162,7 @@ motd = "<gradient:#FFd32a:#FFa801>An Eaglercraft-Compatible Minecraft Server</gr
 show-max-players = 20
 online-mode = false
 prevent-client-proxy-connections = false
-player-info-forwarding-mode = "legacy"
+player-info-forwarding-mode = "none"
 announce-forge = false
 kick-existing-players = false
 ping-passthrough = "disabled"
@@ -210,6 +234,10 @@ limit = 5
 }
 
 function startUnifiedProxy(proxyPort, mcTargetPort, relayTargetPort) {
+  if (unifiedProxyServer) {
+    try { unifiedProxyServer.close(); } catch (e) {}
+  }
+
   const binDir = path.resolve(__dirname, '../bin');
   const certPath = path.join(binDir, 'cert.pem');
   const keyPath = path.join(binDir, 'key.pem');
@@ -263,57 +291,135 @@ function startUnifiedProxy(proxyPort, mcTargetPort, relayTargetPort) {
     }
   });
 
-  server.listen(proxyPort, () => {
-    console.log(`\n==================================================`);
-    console.log(`UNIFIED SECURE REVERSE PROXY RUNNING ON PORT ${proxyPort}`);
-    console.log(`==================================================\n`);
-  });
+  function killPort(port) {
+    try {
+      if (process.platform === 'win32') {
+        const out = execSync(
+          `powershell -NoProfile -Command "(Get-NetTCPConnection -LocalPort ${port} -ErrorAction SilentlyContinue).OwningProcess"`,
+          { encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] }
+        );
+        const pids = out.trim().split(/\r?\n/).map(p => p.trim()).filter(p => /^\d+$/.test(p) && p !== '0' && p !== String(process.pid));
+        for (const pid of pids) {
+          try { execSync(`taskkill /F /PID ${pid}`, { stdio: 'ignore' }); } catch (_) {}
+        }
+      }
+    } catch (_) {}
+  }
+
+  function tryListen(retries = 3) {
+    server.listen(proxyPort, () => {
+      console.log(`\n==================================================`);
+      console.log(`UNIFIED SECURE REVERSE PROXY RUNNING ON PORT ${proxyPort}`);
+      console.log(`==================================================\n`);
+    });
+
+    server.on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        console.warn(`[Proxy] Port ${proxyPort} is already in use. Freeing it...`);
+        killPort(proxyPort);
+        if (retries > 0) {
+          server.removeAllListeners('error');
+          server.close(() => {
+            setTimeout(() => tryListen(retries - 1), 2000);
+          });
+        } else {
+          console.error(`[Proxy] Could not bind to port ${proxyPort} after multiple attempts.`);
+        }
+      } else {
+        console.error('[Proxy] Server error:', err.message);
+      }
+    });
+  }
+
+  tryListen();
+
+  unifiedProxyServer = server;
+}
+
+
+function stopEaglerProxyAndRelay() {
+  console.log('Stopping Eaglercraft Proxy and SP Relay...');
+  if (unifiedProxyServer) {
+    try { unifiedProxyServer.close(); } catch (e) {}
+    unifiedProxyServer = null;
+  }
+  if (relayProcess) {
+    try { relayProcess.kill(); } catch (e) {}
+    relayProcess = null;
+  }
+  if (velocityProcess) {
+    try { velocityProcess.kill(); } catch (e) {}
+    velocityProcess = null;
+  }
+  killOrphanedJavaProcess('sp-relay.jar');
+  killOrphanedJavaProcess('Velocity.jar');
+  return getProxyStatus();
 }
 
 async function startEaglerProxyAndRelay() {
   try {
+    // 1. Terminate any previous orphaned instances before starting
+    stopEaglerProxyAndRelay();
+
+    // Kill any external process that may be holding the proxy port
+    const configuredProxyPort = process.env.PORT ? parseInt(process.env.PORT, 10) : VELOCITY_PROXY_PORT;
+    try {
+      if (process.platform === 'win32') {
+        const out = execSync(
+          `powershell -NoProfile -Command "(Get-NetTCPConnection -LocalPort ${configuredProxyPort} -ErrorAction SilentlyContinue).OwningProcess"`,
+          { encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] }
+        );
+        const pids = out.trim().split(/\r?\n/).map(p => p.trim()).filter(p => /^\d+$/.test(p) && p !== '0' && p !== String(process.pid));
+        for (const pid of pids) {
+          try { execSync(`taskkill /F /PID ${pid}`, { stdio: 'ignore' }); console.log(`[Proxy] Freed port ${configuredProxyPort} (killed PID ${pid})`); } catch (_) {}
+        }
+      }
+    } catch (_) {}
+
     await setupVelocityProxy();
 
     console.log('\nStarting proxy and relay servers...');
     const binDir = path.resolve(__dirname, '../bin');
+    const javaExec = getJava21Executable();
 
-    // 1. Spawn Eaglercraft Java SP Relay backend (sp-relay.jar)
+    // 2. Spawn Eaglercraft Java SP Relay backend (sp-relay.jar) WITHOUT shell wrapper to enable direct kill
     console.log('Starting Eaglercraft Java SP Relay backend (sp-relay.jar)...');
-    const relayProcess = spawn('java', ['-jar', 'sp-relay.jar'], {
+    relayProcess = spawn(javaExec, ['-jar', 'sp-relay.jar'], {
       cwd: binDir,
-      stdio: 'ignore',
-      shell: true
+      stdio: 'ignore'
     });
 
-    // 2. Spawn Velocity Proxy Server (port 25566)
+    // 3. Spawn Velocity Proxy Server (port 25566) WITHOUT shell wrapper
     console.log('Starting Velocity Proxy Server (port 25566)...');
-    const velocityProcess = spawn('java', [
+    velocityProcess = spawn(javaExec, [
       '-Xmx512M',
       '-Xms512M',
       '-jar',
       'Velocity.jar'
     ], {
       cwd: MC_DIR,
-      stdio: 'ignore',
-      shell: true
+      stdio: 'ignore'
     });
 
     const cleanup = () => {
-      try { relayProcess.kill(); } catch (e) {}
-      try { velocityProcess.kill(); } catch (e) {}
+      stopEaglerProxyAndRelay();
     };
 
     process.on('exit', cleanup);
     process.on('SIGINT', cleanup);
 
-    // 3. Start unified secure reverse proxy on port 8608
-    const configuredProxyPort = process.env.PORT ? parseInt(process.env.PORT, 10) : VELOCITY_PROXY_PORT;
+    // 4. Start unified secure reverse proxy on port 8608
     startUnifiedProxy(configuredProxyPort, VELOCITY_PORT, RELAY_PORT);
 
-    return { cleanup };
+    return { cleanup, status: getProxyStatus() };
   } catch (err) {
     console.error('Setup/Startup error occurred:', err);
+    throw err;
   }
 }
 
-module.exports = { startEaglerProxyAndRelay };
+module.exports = {
+  startEaglerProxyAndRelay,
+  stopEaglerProxyAndRelay,
+  getProxyStatus
+};

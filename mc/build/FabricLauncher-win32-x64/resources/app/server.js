@@ -5,7 +5,7 @@ const http = require('http');
 const WebSocket = require('ws');
 const formidable = require('formidable');
 const fs = require('fs-extra');
-const { exec } = require('child_process');
+const { exec, spawn } = require('child_process');
 
 const { MODS_DIR, INSTANCE_DIR, ROAMING_MINECRAFT } = require('./lib/paths');
 const { getModsList, toggleMod, deleteMod } = require('./lib/mods-manager');
@@ -13,8 +13,8 @@ const { getRoamingInfo, syncFromRoaming } = require('./lib/roaming-sync');
 const { launchGame, killGame, getGameStatus, locateJava } = require('./lib/game-runner');
 
 const app = express();
-const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
+let server = null;
+let wss = null;
 
 app.use(cors());
 app.use(express.json());
@@ -22,15 +22,6 @@ app.use(express.static(path.join(__dirname, 'launcher')));
 
 // WebSocket connections for real-time log streaming & status broadcasts
 const clients = new Set();
-
-wss.on('connection', (ws) => {
-  clients.add(ws);
-  ws.send(JSON.stringify({ type: 'status', data: getGameStatus() }));
-
-  ws.on('close', () => {
-    clients.delete(ws);
-  });
-});
 
 function broadcast(type, data) {
   const msg = JSON.stringify({ type, data });
@@ -184,43 +175,109 @@ app.post('/api/kill', (req, res) => {
   res.json({ success: true, killed });
 });
 
+// Fabric Server Management Routes
+const {
+  getServerStatus,
+  startMinecraftServer,
+  stopMinecraftServer,
+  sendServerCommand
+} = require('./lib/server-runner');
+
+app.get('/api/server/status', (req, res) => {
+  res.json({ success: true, status: getServerStatus() });
+});
+
+app.post('/api/server/start', (req, res) => {
+  try {
+    startMinecraftServer(
+      (logEntry) => broadcast('log', logEntry),
+      (status) => broadcast('serverStatus', status)
+    );
+    res.json({ success: true, message: 'Server starting...' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/server/stop', (req, res) => {
+  const stopped = stopMinecraftServer();
+  broadcast('serverStatus', getServerStatus());
+  res.json({ success: true, stopped });
+});
+
+app.post('/api/server/command', (req, res) => {
+  const { command } = req.body;
+  const sent = sendServerCommand(command);
+  res.json({ success: true, sent });
+});
+
+// Eaglercraft Proxy Management Routes
+const {
+  startEaglerProxyAndRelay,
+  stopEaglerProxyAndRelay,
+  getProxyStatus
+} = require('./lib/eagler-proxy');
+
+app.get('/api/proxy/status', (req, res) => {
+  res.json({ success: true, status: getProxyStatus() });
+});
+
+app.post('/api/proxy/start', async (req, res) => {
+  try {
+    await startEaglerProxyAndRelay();
+    broadcast('proxyStatus', getProxyStatus());
+    res.json({ success: true, status: getProxyStatus() });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/proxy/stop', (req, res) => {
+  try {
+    const status = stopEaglerProxyAndRelay();
+    broadcast('proxyStatus', status);
+    res.json({ success: true, status });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 function startServer(initialPort = process.env.PORT || 3007) {
   return new Promise((resolve, reject) => {
     let currentPort = parseInt(initialPort, 10);
 
     const tryListen = (portToTry) => {
-      const onError = (err) => {
+      const currentServer = http.createServer(app);
+
+      currentServer.once('error', (err) => {
         if (err.code === 'EADDRINUSE') {
           console.warn(`Port ${portToTry} in use, trying port ${portToTry + 1}...`);
-          server.removeListener('error', onError);
           tryListen(portToTry + 1);
         } else {
           reject(err);
         }
-      };
+      });
 
-      server.once('error', onError);
+      currentServer.listen(portToTry, () => {
+        server = currentServer;
+        wss = new WebSocket.Server({ server });
 
-      server.listen(portToTry, () => {
-        server.removeListener('error', onError);
+        wss.on('connection', (ws) => {
+          clients.add(ws);
+          ws.send(JSON.stringify({ type: 'status', data: getGameStatus() }));
+
+          ws.on('close', () => {
+            clients.delete(ws);
+          });
+        });
+
         const url = `http://localhost:${portToTry}`;
         console.log(`====================================================`);
         console.log(` Fabric 1.21.1 Minecraft Launcher Backend Ready`);
         console.log(` Interface running at: ${url}`);
         console.log(`====================================================`);
         
-        // Boot Eaglercraft Proxy and SP Relay in the background
-        const { startEaglerProxyAndRelay } = require('./lib/eagler-proxy');
-        startEaglerProxyAndRelay().then(proxyControl => {
-          if (proxyControl && proxyControl.cleanup) {
-            process.on('exit', () => proxyControl.cleanup());
-            process.on('SIGINT', () => { proxyControl.cleanup(); });
-          }
-        }).catch(err => {
-          console.error('Failed to start Eaglercraft proxy/relay:', err.message);
-        });
-
-        // Boot Minecraft Server Control Panel backend in the background
+        // Boot Minecraft Server Control Panel backend on port 3000
         console.log('Starting Minecraft Server Control Panel (port 3000)...');
         const panelExe = path.join(__dirname, 'bin/MinecraftServerControlPanel.exe');
         if (fs.existsSync(panelExe)) {
@@ -234,14 +291,12 @@ function startServer(initialPort = process.env.PORT || 3007) {
           process.on('SIGINT', () => {
             try { panelProcess.kill(); } catch (e) {}
           });
-        } else {
-          console.warn('[Warning] MinecraftServerControlPanel.exe not found in bin/ folder.');
         }
 
         if (process.pkg) {
-            import('open').then(open => open.default(url)).catch(err => {
-                console.error("Could not automatically open browser:", err);
-            });
+          import('open').then(open => open.default(url)).catch(err => {
+            console.error("Could not automatically open browser:", err);
+          });
         }
         
         resolve(portToTry);
@@ -258,5 +313,3 @@ if (require.main === module) {
 }
 
 module.exports = { startServer, app };
-
-

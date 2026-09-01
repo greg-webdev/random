@@ -1,0 +1,7 @@
+{
+  "name": "ollamagent",
+  "displayName": "Ollama AI Agent Plugin",
+  "version": "1.0.0",
+  "description": "Empowers Antigravity IDE and agents with local Ollama models and autonomous tool orchestration",
+  "publisher": "ollamagent"
+}
