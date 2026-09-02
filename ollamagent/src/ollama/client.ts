@@ -77,6 +77,11 @@ export class OllamaClient {
     const payload = {
       keep_alive: '60m',
       ...request,
+      options: {
+        num_predict: -1, // Remove token limit (unlimited generation until EOS)
+        num_ctx: 32768,   // 32k context window (no truncation)
+        ...(request.options || {}),
+      },
       stream: true,
     };
 
@@ -150,7 +155,13 @@ export class OllamaClient {
     signal?: AbortSignal
   ): Promise<OllamaChatChunk> {
     const payload = {
+      keep_alive: '60m',
       ...request,
+      options: {
+        num_predict: -1, // Remove token limit (unlimited generation until EOS)
+        num_ctx: 32768,   // 32k context window (no truncation)
+        ...(request.options || {}),
+      },
       stream: false,
     };
 
@@ -177,7 +188,13 @@ export class OllamaClient {
     signal?: AbortSignal
   ): AsyncGenerator<OllamaGenerateChunk, void, unknown> {
     const payload = {
+      keep_alive: '60m',
       ...request,
+      options: {
+        num_predict: -1, // Remove token limit (unlimited generation until EOS)
+        num_ctx: 32768,   // 32k context window (no truncation)
+        ...(request.options || {}),
+      },
       stream: true,
     };
 

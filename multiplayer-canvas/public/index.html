@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>LiveCanvas - Multiplayer Cursor & Drawing Board</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Header Navigation Bar -->
+    <header class="top-bar">
+      <div class="brand-section">
+        <div class="brand-icon">🎨</div>
+        <span class="brand-name">LiveCanvas</span>
+        <span class="live-badge">REAL-TIME</span>
+      </div>
+
+      <div class="center-controls">
+        <button id="undoBtn" class="top-btn" title="Undo Last Stroke (Ctrl+Z)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11"/>
+          </svg>
+          <span>Undo</span>
+        </button>
+
+        <button id="clearBtn" class="top-btn danger" title="Clear Canvas for Everyone">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          </svg>
+          <span>Clear Board</span>
+        </button>
+
+        <button id="saveBtn" class="top-btn" title="Save / Export Canvas PNG">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          <span>Export</span>
+        </button>
+      </div>
+
+      <div class="network-section">
+        <!-- Local Network Sharing Pill -->
+        <button id="shareLanBtn" class="lan-pill" title="Click to copy local network URL for other devices">
+          <span class="lan-dot"></span>
+          <span class="lan-label">Share: <strong id="lanAddress">Loading IP...</strong></span>
+          <span class="copy-hint" id="copyHint">Copy</span>
+        </button>
+
+        <!-- Participants Counter -->
+        <div class="users-pill" id="usersPill" title="Connected Players">
+          <span class="status-pulse"></span>
+          <span id="userCountText">1 Online</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Floating Drawing Tool Panel -->
+    <aside class="tool-panel">
+      <!-- Tool Selection -->
+      <div class="tool-group">
+        <button class="tool-btn active" data-tool="pen" title="Freehand Pen (P)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><circle cx="11" cy="11" r="2"/>
+          </svg>
+          <span class="tool-tooltip">Pen</span>
+        </button>
+
+        <button class="tool-btn" data-tool="highlighter" title="Highlighter (H)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 11l-6 6v3h3l6-6"/><path d="M22 2l-3 3-7-7 3-3 7 7z"/><path d="M15 9l4 4"/>
+          </svg>
+          <span class="tool-tooltip">Highlighter</span>
+        </button>
+
+        <button class="tool-btn" data-tool="eraser" title="Eraser (E)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 20H7L3 16C2 15 2 13 3 12L13 2C14 1 16 1 17 2L21 6C22 7 22 9 21 10L11 20"/><line x1="18" y1="9" x2="11" y2="16"/>
+          </svg>
+          <span class="tool-tooltip">Eraser</span>
+        </button>
+
+        <button class="tool-btn ping-mode-btn" data-tool="ping" title="Sonar Ping Tool (Or Right-Click Anywhere)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+          </svg>
+          <span class="tool-tooltip">Radar Ping</span>
+        </button>
+      </div>
+
+      <div class="panel-divider"></div>
+
+      <!-- Color Palette -->
+      <div class="color-palette">
+        <button class="color-swatch active" style="--c: #3b82f6;" data-color="#3b82f6"></button>
+        <button class="color-swatch" style="--c: #ef4444;" data-color="#ef4444"></button>
+        <button class="color-swatch" style="--c: #10b981;" data-color="#10b981"></button>
+        <button class="color-swatch" style="--c: #f59e0b;" data-color="#f59e0b"></button>
+        <button class="color-swatch" style="--c: #8b5cf6;" data-color="#8b5cf6"></button>
+        <button class="color-swatch" style="--c: #ec4899;" data-color="#ec4899"></button>
+        <button class="color-swatch" style="--c: #ffffff;" data-color="#ffffff"></button>
+        <button class="color-swatch" style="--c: #09090b;" data-color="#09090b"></button>
+        <label class="custom-color-btn" title="Pick Custom Color">
+          <input type="color" id="customColorPicker" value="#6366f1" />
+          <span>🎨</span>
+        </label>
+      </div>
+
+      <div class="panel-divider"></div>
+
+      <!-- Stroke Size Slider -->
+      <div class="size-control">
+        <div class="size-preview">
+          <div id="sizeIndicatorDot" class="size-dot"></div>
+        </div>
+        <input type="range" id="sizeSlider" min="2" max="48" value="6" orient="vertical" title="Brush Size" />
+        <span id="sizeValueText" class="size-val">6px</span>
+      </div>
+    </aside>
+
+    <!-- Main Drawing Canvas Viewport -->
+    <main class="canvas-viewport" id="canvasViewport">
+      <canvas id="drawingCanvas"></canvas>
+      <!-- Overlay Layer for Live Cursors and Sonar Pings -->
+      <div id="cursorOverlay" class="cursor-overlay"></div>
+    </main>
+
+    <!-- Bottom Left: User Identity Bar -->
+    <div class="user-card">
+      <div id="myColorDot" class="user-avatar-dot"></div>
+      <input type="text" id="usernameInput" value="Painter" maxlength="20" title="Click to change your display name" />
+      <span class="user-hint">✏️ Edit name</span>
+    </div>
+
+    <!-- Bottom Center: Quick Reaction Emojis -->
+    <div class="reaction-bar">
+      <button class="rx-btn" data-emoji="👍">👍</button>
+      <button class="rx-btn" data-emoji="❤️">❤️</button>
+      <button class="rx-btn" data-emoji="🔥">🔥</button>
+      <button class="rx-btn" data-emoji="🚀">🚀</button>
+      <button class="rx-btn" data-emoji="🎉">🎉</button>
+      <button class="rx-btn" data-emoji="😂">😂</button>
+      <span class="ping-shortcut-hint">💡 Tip: Right-click anywhere to Ping!</span>
+    </div>
+
+    <!-- Bottom Right: Real-time Activity Feed / Notification Toast Container -->
+    <div id="activityFeed" class="activity-feed"></div>
+
+    <!-- Connecting / Reconnecting Overlay Banner -->
+    <div id="connectionBanner" class="connection-banner hidden">
+      <div class="spinner"></div>
+      <span id="connectionText">Connecting to LiveCanvas server...</span>
+    </div>
+  </div>
+
+  <script src="client.js"></script>
+</body>
+</html>

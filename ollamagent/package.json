@@ -217,8 +217,8 @@
         },
         "ollamagent.contextWindow": {
           "type": "number",
-          "default": 16384,
-          "description": "Context window size (num_ctx) sent to Ollama (default: 16384)."
+          "default": 32768,
+          "description": "Context window size (num_ctx) sent to Ollama (default: 32768)."
         },
         "ollamagent.maxTokens": {
           "type": "number",

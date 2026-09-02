@@ -44,7 +44,6 @@ class ThinkingTagStreamer {
       if (!this.inThink) {
         const startIdx = this.buffer.indexOf('<think>');
         if (startIdx === -1) {
-          // Check if buffer ends with partial "<think" prefix
           const partialMatch = this.buffer.match(/<t?(h?(i?(n?k?)?)?)?$/);
           if (partialMatch && partialMatch.index !== undefined && partialMatch.index < this.buffer.length) {
             const emitText = this.buffer.substring(0, partialMatch.index);
@@ -65,7 +64,6 @@ class ThinkingTagStreamer {
       } else {
         const endIdx = this.buffer.indexOf('</think>');
         if (endIdx === -1) {
-          // Check if buffer ends with partial "</think" prefix
           const partialMatch = this.buffer.match(/<\/?t?(h?(i?(n?k?)?)?)?$/);
           if (partialMatch && partialMatch.index !== undefined && partialMatch.index < this.buffer.length) {
             const emitText = this.buffer.substring(0, partialMatch.index);
@@ -109,6 +107,37 @@ export class AgentLoop {
   }
 
   /**
+   * Compact conversation history to prevent context window saturation
+   * (which causes responses to stop earlier and earlier over multiple turns).
+   */
+  private compactConversationHistory(history: OllamaMessage[], maxCharsBudget: number = 28000): OllamaMessage[] {
+    const compacted = history.map((msg) => ({ ...msg }));
+
+    // 1. Prune ancient tool execution results (keep only latest 2 tool outputs full)
+    let toolCount = 0;
+    for (let i = compacted.length - 1; i >= 0; i--) {
+      if (compacted[i].role === 'tool') {
+        toolCount++;
+        if (toolCount > 2) {
+          const content = compacted[i].content || '';
+          if (content.length > 250) {
+            compacted[i].content = content.slice(0, 200) + '\n... [Older tool output condensed to preserve context budget]';
+          }
+        }
+      }
+    }
+
+    // 2. Slide out oldest messages if total character volume exceeds budget
+    let totalChars = compacted.reduce((sum, m) => sum + (m.content?.length || 0), 0);
+    while (totalChars > maxCharsBudget && compacted.length > 4) {
+      const dropped = compacted.shift();
+      totalChars -= (dropped?.content?.length || 0);
+    }
+
+    return compacted;
+  }
+
+  /**
    * Run agentic loop on a conversation history
    */
   public async run(
@@ -125,16 +154,21 @@ export class AgentLoop {
       ? buildAgentSystemPrompt(options.systemPromptOverride)
       : buildChatSystemPrompt(options.systemPromptOverride);
 
+    // Compact history to ensure context window never gets starved
+    const compactedHistory = this.compactConversationHistory(history);
+
     // Prepare active conversation messages
     const messages: OllamaMessage[] = [
       { role: 'system', content: systemPrompt },
-      ...history,
+      ...compactedHistory,
       { role: 'user', content: userMessage },
     ];
 
     let currentTurn = 0;
+    let autoContinueCount = 0;
     let keepRunning = true;
     let fallbackToTextTools = false;
+    let fullFinalAssistantResponse = '';
 
     while (keepRunning && currentTurn < maxTurns) {
       if (signal?.aborted) {
@@ -162,7 +196,7 @@ export class AgentLoop {
             options: {
               temperature: options.temperature ?? 0.2,
               num_ctx: options.numCtx ?? 16384,
-              num_predict: options.numPredict ?? -1, // -1 ensures generation is not prematurely truncated
+              num_predict: options.numPredict ?? -1,
             },
             keep_alive: '60m',
           },
@@ -196,9 +230,7 @@ export class AgentLoop {
         }
 
         streamer.flush();
-
-        // Generation completed for this turn
-        // If generation reached max tokens/length, do not inject spam notices into the message history.
+        fullFinalAssistantResponse += assistantContent;
 
         // If no native tool calls were reported, check if model output formatted tool call as JSON
         if (isAutonomous && detectedToolCalls.length === 0) {
@@ -244,10 +276,18 @@ export class AgentLoop {
               content: `[Tool Execution Result for ${toolName}]\n${result.output}`,
             });
           }
+        } else if (lastDoneReason === 'length' && autoContinueCount < 2) {
+          // Model was cut off by token limit while generating text. Seamlessly auto-continue!
+          autoContinueCount++;
+          messages.push({
+            role: 'user',
+            content: 'Continue from the exact character where you stopped, without repeating.',
+          });
+          continue;
         } else {
-          // No more tool calls, agent has completed task
+          // No more tool calls and normal completion
           keepRunning = false;
-          callbacks.onComplete?.(assistantContent);
+          callbacks.onComplete?.(fullFinalAssistantResponse);
         }
       } catch (err: any) {
         if (err.name === 'AbortError' || signal?.aborted) {
@@ -269,7 +309,7 @@ export class AgentLoop {
 
     if (currentTurn >= maxTurns && keepRunning) {
       callbacks.onToken?.('\n\n*(Reached maximum autonomous step limit)*');
-      callbacks.onComplete?.(messages[messages.length - 1]?.content || '');
+      callbacks.onComplete?.(fullFinalAssistantResponse);
     }
 
     // Return conversation history excluding initial system prompt

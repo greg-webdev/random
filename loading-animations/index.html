@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fun Loading Animations</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f8ff;
+            font-family: sans-serif;
+            gap: 40px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        /* 1. Spinning Loader */
+        .spinner-container {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .spinner {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #3498db;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1.5s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 2. Pulsing Effect */
+        .pulse-box {
+            width: 100px;
+            height: 100px;
+            background-color: #e74c3c;
+            border-radius: 10px;
+            animation: pulse 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        /* 3. Typewriter Effect (Text) */
+        .typewriter-text {
+            font-size: 1.5em;
+            color: #2ecc71;
+            white-space: nowrap;
+            overflow: hidden; /* Ensures the text is hidden until typed */
+            border-right: .15em solid #2ecc71; /* The typing cursor */
+            width: 0; /* Start with no width */
+            animation: 
+                typing 3s steps(30, end) forwards,
+                blink-caret .75s step-end infinite;
+        }
+
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: #2ecc71; }
+        }
+    </style>
+</head>
+<body>
+    <h1>✨ Fun Loading Animations Showcase ✨</h1>
+
+    <!-- Animation 1: Spinning Loader -->
+    <div class="spinner-container">
+        <div class="spinner"></div>
+        <span>Loading Data...</span>
+    </div>
+
+    <!-- Animation 2: Pulsing Effect -->
+    <div class="pulse-box"></div>
+    <span>Processing Request...</span>
+
+    <!-- Animation 3: Typewriter Effect -->
+    <div class="typewriter-text">Welcome to the Animated World!</div>
+
+    <script>
+        // Optional: Add a simple JS interaction to demonstrate the animations
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("Animations loaded successfully!");
+        });
+    </script>
+</body>
+</html>

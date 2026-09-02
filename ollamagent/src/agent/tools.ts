@@ -257,19 +257,49 @@ export class WorkspaceTools {
       throw new Error(`File does not exist: ${filePath}`);
     }
 
-    const content = fs.readFileSync(fullPath, 'utf8');
-    const occurrences = content.split(target).length - 1;
+    const rawContent = fs.readFileSync(fullPath, 'utf8');
 
-    if (occurrences === 0) {
-      throw new Error(`Target text was not found in ${filePath}`);
-    }
-    if (occurrences > 1) {
-      throw new Error(`Target text matched ${occurrences} times in ${filePath}. Please provide a larger unique context block.`);
+    // 1. Direct exact match
+    if (rawContent.includes(target)) {
+      const occurrences = rawContent.split(target).length - 1;
+      if (occurrences > 1) {
+        throw new Error(`Target text matched ${occurrences} times in ${filePath}. Please provide a larger unique context block.`);
+      }
+      const updated = rawContent.replace(target, replacement);
+      fs.writeFileSync(fullPath, updated, 'utf8');
+      return `Successfully replaced target in ${filePath}`;
     }
 
-    const updated = content.replace(target, replacement);
-    fs.writeFileSync(fullPath, updated, 'utf8');
-    return `Successfully replaced target in ${filePath}`;
+    // 2. Normalized line endings (\r\n vs \n) for Windows compatibility
+    const normContent = rawContent.replace(/\r\n/g, '\n');
+    const normTarget = target.replace(/\r\n/g, '\n');
+    const normReplacement = replacement.replace(/\r\n/g, '\n');
+
+    if (normContent.includes(normTarget)) {
+      const occurrences = normContent.split(normTarget).length - 1;
+      if (occurrences > 1) {
+        throw new Error(`Target text matched ${occurrences} times in ${filePath}. Please provide a larger unique context block.`);
+      }
+      const updated = normContent.replace(normTarget, normReplacement);
+      // Restore CRLF if original file had CRLF
+      const finalContent = rawContent.includes('\r\n') ? updated.replace(/\n/g, '\r\n') : updated;
+      fs.writeFileSync(fullPath, finalContent, 'utf8');
+      return `Successfully replaced target in ${filePath}`;
+    }
+
+    // 3. Trimmed / fuzzy whitespace fallback
+    const trimmedTarget = normTarget.trim();
+    if (trimmedTarget && normContent.includes(trimmedTarget)) {
+      const occurrences = normContent.split(trimmedTarget).length - 1;
+      if (occurrences === 1) {
+        const updated = normContent.replace(trimmedTarget, normReplacement.trim());
+        const finalContent = rawContent.includes('\r\n') ? updated.replace(/\n/g, '\r\n') : updated;
+        fs.writeFileSync(fullPath, finalContent, 'utf8');
+        return `Successfully replaced target in ${filePath} (using trimmed match)`;
+      }
+    }
+
+    throw new Error(`Target text was not found in ${filePath}. Verify line numbers and content using read_file.`);
   }
 
   private async listDirectory(dirPath: string): Promise<string> {

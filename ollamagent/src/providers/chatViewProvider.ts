@@ -248,7 +248,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
 
     const config = vscode.workspace.getConfiguration('ollamagent');
     const temperature = config.get<number>('temperature', 0.2);
-    const numCtx = config.get<number>('contextWindow', 16384);
+    const numCtx = config.get<number>('contextWindow', 32768);
     const numPredict = config.get<number>('maxTokens', -1);
     const systemOverride = config.get<string>('systemPrompt', '');
 

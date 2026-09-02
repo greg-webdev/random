@@ -6,6 +6,10 @@ async function testFast() {
     body: JSON.stringify({
       model: 'qwen3.5:4b',
       messages: [{ role: 'user', content: 'What is 2+2?' }],
+      options: {
+        num_predict: -1,
+        num_ctx: 32768
+      },
       stream: false
     })
   });

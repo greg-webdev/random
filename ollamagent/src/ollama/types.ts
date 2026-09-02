@@ -59,21 +59,28 @@ export interface OllamaMessage {
   tool_calls?: OllamaToolCall[];
 }
 
+export interface OllamaOptions {
+  temperature?: number;
+  top_p?: number;
+  top_k?: number;
+  min_p?: number;
+  num_ctx?: number;
+  num_predict?: number;
+  repeat_penalty?: number;
+  presence_penalty?: number;
+  frequency_penalty?: number;
+  seed?: number;
+  stop?: string[];
+  [key: string]: any;
+}
+
 export interface OllamaChatRequest {
   model: string;
   messages: OllamaMessage[];
   tools?: OllamaTool[];
   format?: 'json' | string;
   stream?: boolean;
-  options?: {
-    temperature?: number;
-    top_p?: number;
-    top_k?: number;
-    num_ctx?: number;
-    num_predict?: number;
-    seed?: number;
-    stop?: string[];
-  };
+  options?: OllamaOptions;
   keep_alive?: string;
 }
 
