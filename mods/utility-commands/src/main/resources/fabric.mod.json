@@ -1,0 +1,29 @@
+{
+	"schemaVersion": 1,
+	"id": "utility_commands",
+	"version": "${version}",
+	"name": "Utility Commands",
+	"description": "Adds /home, /spawn, /tpa, /tpahere, /tpaccept, /tpdeny, /seeinv, /dupenable, /setinvsize, and top-left quick utility buttons.",
+	"authors": [
+		"Antigravity"
+	],
+	"license": "MIT",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.example.utilitycommands.UtilityCommandsMod"
+		],
+		"client": [
+			"com.example.utilitycommands.client.UtilityCommandsClient"
+		]
+	},
+	"mixins": [
+		"utility_commands.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.19.3",
+		"minecraft": "~1.21.11",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}

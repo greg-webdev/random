@@ -366,14 +366,39 @@ export class WorkspaceTools {
     return `Search matches for "${query}" (capped at 40):\n` + results.join('\n');
   }
 
-  private async runTerminalCommand(command: string, timeoutMs: number = 30000): Promise<string> {
+  private async runTerminalCommand(command: string, timeoutMs: number = 60000): Promise<string> {
     return new Promise((resolve) => {
+      const isWindows = process.platform === 'win32';
+      const shell = isWindows ? 'powershell.exe' : '/bin/bash';
+
+      // Build enhanced PATH on Windows so python scripts (pyinstaller, uvicorn, etc.) are always found
+      const env = { ...process.env };
+      if (isWindows) {
+        const userProfile = process.env.USERPROFILE || '';
+        const pythonPaths = [
+          path.join(userProfile, 'AppData', 'Local', 'Python', 'pythoncore-3.14-64', 'Scripts'),
+          path.join(userProfile, 'AppData', 'Local', 'Programs', 'Python', 'Python314', 'Scripts'),
+          path.join(userProfile, 'AppData', 'Local', 'Programs', 'Python', 'Python313', 'Scripts'),
+          path.join(userProfile, 'AppData', 'Local', 'Programs', 'Python', 'Python312', 'Scripts'),
+          path.join(userProfile, 'AppData', 'Local', 'Programs', 'Python', 'Python311', 'Scripts'),
+          path.join(userProfile, 'AppData', 'Roaming', 'Python', 'Python314', 'Scripts'),
+          path.join(userProfile, 'AppData', 'Roaming', 'Python', 'Python313', 'Scripts'),
+        ];
+        const existingPath = env.PATH || '';
+        const extraPaths = pythonPaths.filter((p) => fs.existsSync(p)).join(';');
+        if (extraPaths) {
+          env.PATH = `${extraPaths};${existingPath}`;
+        }
+      }
+
       exec(
         command,
         {
           cwd: this.workspaceRoot,
           timeout: timeoutMs,
-          maxBuffer: 1024 * 1024 * 5,
+          maxBuffer: 1024 * 1024 * 10,
+          shell,
+          env,
         },
         (error, stdout, stderr) => {
           let out = '';
@@ -381,8 +406,12 @@ export class WorkspaceTools {
           if (stderr) out += (out ? '\n[STDERR]\n' : '') + stderr;
           if (error) {
             out += `\n[Process exited with code ${error.code || 1}]`;
+            // Helpful hint for Python CLI tools on Windows
+            if (out.includes('is not recognized as the name of a cmdlet') && command.includes('pyinstaller')) {
+              out += '\n💡 Tip: Try running with `python -m PyInstaller <args>` if the script is not in system PATH.';
+            }
           }
-          resolve(out || '(Command executed with no output)');
+          resolve(out.trim() || '(Command executed with no output)');
         }
       );
     });

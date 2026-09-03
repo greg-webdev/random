@@ -497,10 +497,14 @@
 
     // Re-inject formatted code blocks
     codeBlocks.forEach((block, idx) => {
+      const isShell = ['bash', 'sh', 'shell', 'powershell', 'cmd', 'ps1'].includes((block.lang || '').toLowerCase());
+      const runBtnHtml = isShell ? `<button class="code-action-btn run-code" data-code="${encodeURIComponent(block.code)}" style="color:#38bdf8;font-weight:600;">▶ Run</button>` : '';
+
       const codeHtml = `<div class="code-block-wrapper">
         <div class="code-header">
           <span>${escapeHtml(block.lang)}</span>
           <div class="code-actions">
+            ${runBtnHtml}
             <button class="code-action-btn copy-code" data-code="${encodeURIComponent(block.code)}">Copy</button>
             <button class="code-action-btn insert-code" data-code="${encodeURIComponent(block.code)}">Insert</button>
             <button class="code-action-btn apply-code" data-code="${encodeURIComponent(block.code)}">Apply</button>
@@ -515,6 +519,15 @@
   }
 
   function attachCodeActionListeners(container) {
+    container.querySelectorAll('.run-code').forEach((btn) => {
+      btn.onclick = () => {
+        const command = decodeURIComponent(btn.getAttribute('data-code') || '');
+        vscode.postMessage({ type: 'runTerminal', command });
+        btn.textContent = 'Running...';
+        setTimeout(() => (btn.textContent = '▶ Run'), 2000);
+      };
+    });
+
     container.querySelectorAll('.copy-code').forEach((btn) => {
       btn.onclick = () => {
         const code = decodeURIComponent(btn.getAttribute('data-code') || '');

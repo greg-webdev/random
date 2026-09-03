@@ -224,6 +224,11 @@
           "type": "number",
           "default": -1,
           "description": "Maximum tokens to predict (num_predict). -1 means unlimited (no cutoff)."
+        },
+        "ollamagent.allowTerminalCommands": {
+          "type": "boolean",
+          "default": true,
+          "description": "Allow the AI Agent to execute terminal commands (e.g. running scripts, tests, pyinstaller, builds)."
         }
       }
     }

@@ -156,6 +156,15 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
           this.applyCodeToActiveEditor(data.code);
           break;
         }
+
+        case 'runTerminal': {
+          if (data.command) {
+            const terminal = vscode.window.activeTerminal || vscode.window.createTerminal('OllamaAgent');
+            terminal.show(true);
+            terminal.sendText(data.command);
+          }
+          break;
+        }
       }
     });
 
@@ -252,6 +261,11 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     const numPredict = config.get<number>('maxTokens', -1);
     const systemOverride = config.get<string>('systemPrompt', '');
 
+    // Auto-enable autonomous tool execution if message requests running a command or build
+    const cmdKeywords = ['run ', 'execute ', 'pyinstaller', 'python ', 'pip install', 'build '];
+    const isCommandRequest = cmdKeywords.some((k) => userText.toLowerCase().includes(k));
+    const effectiveAutonomous = this.autonomousMode || isCommandRequest;
+
     try {
       this.history = await this.agentLoop.run(
         this.history,
@@ -261,7 +275,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
           temperature,
           numCtx,
           numPredict,
-          autonomousMode: this.autonomousMode,
+          autonomousMode: effectiveAutonomous,
           systemPromptOverride: systemOverride,
         },
         {

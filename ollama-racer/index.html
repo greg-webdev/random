@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ollama Hyperdrive: Apex 3D Racer</title>
+  <meta name="description" content="High-octane 3D Cyberpunk Racing Game powered by Three.js with an autonomous local Ollama LLM opponent that races and trash-talks in real-time.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- 3D WebGL Canvas Container -->
+  <div id="canvas-container"></div>
+
+  <!-- HUD Overlay -->
+  <div id="hud">
+    <!-- Top Bar -->
+    <header class="hud-top">
+      <!-- Position Indicator -->
+      <div class="hud-card position-card">
+        <span class="hud-label">POSITION</span>
+        <div class="position-display">
+          <span id="player-position" class="position-num">1</span>
+          <span class="position-total">/ 2</span>
+        </div>
+      </div>
+
+      <!-- Lap & Timing -->
+      <div class="hud-card timing-card">
+        <div class="lap-box">
+          <span class="hud-label">LAP</span>
+          <span id="lap-counter" class="lap-val">1<span class="sub">/3</span></span>
+        </div>
+        <div class="timer-box">
+          <span class="hud-label">CURRENT LAP</span>
+          <span id="current-lap-time" class="time-val">00:00.00</span>
+          <div class="best-time-row">
+            <span class="best-label">BEST:</span>
+            <span id="best-lap-time" class="best-val">--:--.--</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gap / Leaderboard -->
+      <div class="hud-card gap-card">
+        <span class="hud-label">RACE GAP</span>
+        <div id="gap-display" class="gap-val leading">AHEAD +0.0s</div>
+        <div id="ai-status-indicator" class="ai-status-pill">
+          <span class="status-dot online"></span>
+          <span id="ai-model-tag">Ollama Connected</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Minimap Radar -->
+    <div id="minimap-container">
+      <canvas id="minimap-canvas" width="180" height="180"></canvas>
+      <div class="minimap-legend">
+        <span class="legend-item"><span class="dot player-dot"></span> YOU</span>
+        <span class="legend-item"><span class="dot ai-dot"></span> OLLAMA</span>
+      </div>
+    </div>
+
+    <!-- Ollama Live Tactical Radio Comms -->
+    <aside id="ollama-comms" class="hud-comms-card">
+      <div class="comms-header">
+        <div class="ai-avatar-wrapper">
+          <div class="ai-avatar" id="ai-avatar">🦙</div>
+          <div class="audio-wave-anim" id="audio-wave">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+        </div>
+        <div class="ai-meta">
+          <div class="ai-name-row">
+            <span class="ai-name">OLLAMA TACTICAL COMMS</span>
+            <span id="ai-tactic-badge" class="tactic-badge">CALCULATING</span>
+          </div>
+          <div class="ai-persona-sub" id="ai-persona-label">Persona: Apex Alpha</div>
+        </div>
+      </div>
+      <div class="comms-body">
+        <div id="comms-text" class="comms-text">
+          "Neural link synchronized. Prepare to eat silicon dust, human."
+        </div>
+      </div>
+      <div class="comms-footer">
+        <span id="ai-latency" class="telemetry-item">Ping: 32ms</span>
+        <span id="ai-boost-state" class="telemetry-item">Nitro: READY</span>
+        <span id="ai-line-state" class="telemetry-item">Line: APEX</span>
+      </div>
+    </aside>
+
+    <!-- Bottom Controls & Speedometer -->
+    <footer class="hud-bottom">
+      <!-- Nitro Boost Gauge -->
+      <div class="hud-card nitro-card">
+        <div class="nitro-header">
+          <span class="hud-label">NITRO BOOST</span>
+          <span id="nitro-key-hint">[SHIFT] TO ENGAGE</span>
+        </div>
+        <div class="nitro-bar-frame">
+          <div id="nitro-bar-fill" class="nitro-bar-fill" style="width: 100%;"></div>
+        </div>
+        <div class="drift-notice" id="drift-notice">DRIFTING! CHARGING NITRO...</div>
+      </div>
+
+      <!-- Futuristic Speedometer -->
+      <div class="speedometer-wrapper">
+        <svg class="speedo-gauge" viewBox="0 0 200 120">
+          <defs>
+            <linearGradient id="speedoGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#00f3ff"/>
+              <stop offset="65%" stop-color="#a855f7"/>
+              <stop offset="100%" stop-color="#ff0055"/>
+            </linearGradient>
+          </defs>
+          <path class="speedo-track" d="M 20 110 A 80 80 0 0 1 180 110" />
+          <path id="speedo-fill" class="speedo-value" d="M 20 110 A 80 80 0 0 1 180 110" />
+        </svg>
+        <div class="speedo-center">
+          <div id="speedo-number" class="speedo-num">000</div>
+          <div class="speedo-unit">KM/H</div>
+          <div id="gear-indicator" class="gear-num">1</div>
+        </div>
+      </div>
+
+      <!-- Controls Hint / Quick Action -->
+      <div class="hud-card controls-card">
+        <div class="ctrl-row"><kbd>W</kbd> / <kbd>▲</kbd> Accelerate</div>
+        <div class="ctrl-row"><kbd>A</kbd> <kbd>D</kbd> / <kbd>◄</kbd> <kbd>►</kbd> Steer</div>
+        <div class="ctrl-row"><kbd>S</kbd> / <kbd>▼</kbd> Brake / Reverse</div>
+        <div class="ctrl-row"><kbd>SPACE</kbd> Power Drift</div>
+        <div class="ctrl-row"><kbd>C</kbd> Change Camera &bull; <kbd>R</kbd> Reset</div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Big Countdown Overlay (3, 2, 1, GO!) -->
+  <div id="countdown-overlay" class="countdown-overlay hidden">
+    <div id="countdown-text" class="countdown-text">READY</div>
+  </div>
+
+  <!-- Race Finished / Victory Modal -->
+  <div id="results-modal" class="results-modal hidden">
+    <div class="modal-content glass-panel">
+      <h2 id="results-title" class="results-title">VICTORY!</h2>
+      <div id="results-subtitle" class="results-subtitle">You defeated the local LLM!</div>
+      
+      <div class="results-stats-grid">
+        <div class="stat-box">
+          <span class="stat-label">TOTAL TIME</span>
+          <span id="res-total-time" class="stat-val">02:14.28</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">BEST LAP</span>
+          <span id="res-best-lap" class="stat-val">00:43.12</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">OLLAMA'S TIME</span>
+          <span id="res-ai-time" class="stat-val">02:18.90</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">AI CAR MODEL</span>
+          <span id="res-ai-model" class="stat-val">qwen3.5:latest</span>
+        </div>
+      </div>
+
+      <div class="ai-post-race-quote">
+        <div class="quote-avatar">🦙</div>
+        <div class="quote-content">
+          <span class="quote-header">Ollama's Debrief:</span>
+          <p id="res-ai-quote">"My loss is within a 2.4% statistical margin of error. Rematch me on a wet circuit!"</p>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button id="btn-play-again" class="btn-primary glow-cyan">RACE AGAIN</button>
+        <button id="btn-open-settings" class="btn-secondary">CONFIG RACE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top-Right Settings / Pause Toggle Button -->
+  <div class="top-nav-controls">
+    <button id="btn-toggle-sound" class="nav-btn" title="Toggle Sound / Synthwave Radio">🔊 SOUND ON</button>
+    <button id="btn-toggle-tts" class="nav-btn" title="Toggle Ollama Voice Radio">🎙️ VOICE ON</button>
+    <button id="btn-camera" class="nav-btn" title="Change Camera View">📷 CAM: CHASE</button>
+    <button id="btn-settings" class="nav-btn" title="Game Settings & Ollama Model">⚙️ CONFIG</button>
+  </div>
+
+  <!-- Settings / Ollama Config Modal -->
+  <div id="settings-modal" class="settings-modal hidden">
+    <div class="settings-panel glass-panel">
+      <div class="settings-header">
+        <h3>⚡ RACE CONFIGURATION & OLLAMA BRAIN</h3>
+        <button id="btn-close-settings" class="close-x">&times;</button>
+      </div>
+
+      <div class="settings-body">
+        <!-- Ollama Model Selector -->
+        <div class="setting-group">
+          <label for="select-ollama-model">OLLAMA RACING MODEL</label>
+          <div class="input-with-action">
+            <select id="select-ollama-model" class="cyber-select">
+              <option value="qwen3.5:latest">qwen3.5:latest (Fast & Agile)</option>
+              <option value="llama3.1:latest">llama3.1:latest (Calculated & Solid)</option>
+              <option value="gemma4-gpu:latest">gemma4-gpu:latest (Ultra-Fast)</option>
+            </select>
+            <button id="btn-refresh-models" class="btn-small" title="Scan local models">🔄 SCAN</button>
+          </div>
+          <small id="ollama-endpoint-note" class="setting-hint">Target: http://127.0.0.1:11434 &bull; Status: <span id="ollama-ping-status" class="status-text online">Online</span></small>
+        </div>
+
+        <!-- Ollama Persona -->
+        <div class="setting-group">
+          <label for="select-ai-persona">AI RACING PERSONALITY</label>
+          <select id="select-ai-persona" class="cyber-select">
+            <option value="apex">Apex Alpha (Aggressive, Nitro-Addict, Ruthless Trash Talk)</option>
+            <option value="oracle">Cyber Oracle (Precision Lines, Analytical, Probability Calculations)</option>
+            <option value="chaos">Chaos Speedster (Wild Drifter, Unpredictable, Risky Overtakes)</option>
+          </select>
+        </div>
+
+        <!-- Race Difficulty / Speed -->
+        <div class="setting-group">
+          <label for="select-difficulty">AI DRIVER PACE</label>
+          <select id="select-difficulty" class="cyber-select">
+            <option value="normal">Normal (Balanced & Fun)</option>
+            <option value="pro">Pro (Fast Cornering & Tactical Blocking)</option>
+            <option value="ludicrous">Ludicrous (Hyperdrive Nitro & Cutthroat)</option>
+          </select>
+        </div>
+
+        <!-- Total Laps -->
+        <div class="setting-group">
+          <label for="select-laps">RACE DISTANCE</label>
+          <select id="select-laps" class="cyber-select">
+            <option value="2">2 Laps (Sprint)</option>
+            <option value="3" selected>3 Laps (Standard)</option>
+            <option value="5">5 Laps (Endurance)</option>
+          </select>
+        </div>
+
+        <!-- Ollama Response Frequency -->
+        <div class="setting-group">
+          <label for="select-ai-freq">OLLAMA TACTICAL CYCLE</label>
+          <select id="select-ai-freq" class="cyber-select">
+            <option value="3000" selected>Dynamic (Every 3.0s)</option>
+            <option value="1800">High-Speed (Every 1.8s)</option>
+            <option value="5000">Relaxed (Every 5.0s)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="settings-footer">
+        <button id="btn-apply-settings" class="btn-primary glow-cyan">APPLY & RESTART</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Start Banner (Click to Launch Audio & Race) -->
+  <div id="start-screen" class="start-screen">
+    <div class="start-hero glass-panel">
+      <div class="brand-tag">GOOGLE DEEPMIND ANTIGRAVITY &bull; LOCAL AI GAMING</div>
+      <h1 class="main-title">OLLAMA <span class="gradient-text">HYPERDRIVE</span></h1>
+      <p class="hero-desc">
+        Take the wheel of a neon hypercar and race head-to-head on a 3D cyberpunk circuit against your local Ollama LLM.
+        It monitors your racing lines, chooses high-speed tactical maneuvers, and taunts you over the radio in real time!
+      </p>
+
+      <div class="feature-pills">
+        <span class="pill">⚡ 60 FPS Three.js Physics</span>
+        <span class="pill">🦙 Real-time Ollama Driver</span>
+        <span class="pill">💨 Drift & Nitro Boost</span>
+        <span class="pill">🎶 Procedural Synthwave Sound</span>
+      </div>
+
+      <div class="detected-model-info" id="detected-model-hero">
+        <span class="pulse-indicator"></span> Ollama detected at localhost:11434 &bull; Opponent ready
+      </div>
+
+      <button id="btn-start-game" class="btn-hero glow-magenta">
+        <span class="btn-text">ENGAGE IGNITION & RACE</span>
+        <span class="btn-subtext">CLICK TO INITIALIZE AUDIO & START</span>
+      </button>
+
+      <div class="quick-controls-guide">
+        <span>Controls: <strong>WASD / Arrow Keys</strong> to drive &bull; <strong>SPACE</strong> to Drift &bull; <strong>SHIFT</strong> for Nitro</span>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
