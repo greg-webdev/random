@@ -1,0 +1,23 @@
+{
+	"schemaVersion": 1,
+	"id": "tntmod",
+	"version": "1.0.0",
+	"name": "TNT Mod",
+	"description": "Custom TNT behavior mod for Minecraft 1.21.11.",
+	"authors": [
+		"geg"
+	],
+	"license": "MIT",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.yourname.tntmod.MainMod"
+		]
+	},
+	"depends": {
+		"fabricloader": ">=0.19.3",
+		"minecraft": "~1.21.11",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}

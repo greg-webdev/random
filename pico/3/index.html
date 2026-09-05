@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Library of Babel • Raspberry Pi Pico USB Archive</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Fira+Code:wght@400;500;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #090a0f;
+      --bg-card: rgba(18, 22, 32, 0.75);
+      --bg-card-border: rgba(230, 175, 46, 0.25);
+      --gold-primary: #e6af2e;
+      --gold-glow: rgba(230, 175, 46, 0.4);
+      --gold-dim: #99751e;
+      --cyan-accent: #00e5ff;
+      --text-main: #e2e8f0;
+      --text-muted: #94a3b8;
+      --page-bg: #07090e;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Interactive Hexagon Canvas */
+    #hex-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.6;
+    }
+
+    .app-container {
+      position: relative;
+      z-index: 1;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 28px;
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    }
+
+    .logo-block {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .hex-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, var(--gold-primary), #ff9f1c);
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Cinzel', serif;
+      font-weight: 900;
+      color: #090a0f;
+      font-size: 22px;
+      box-shadow: 0 0 20px var(--gold-glow);
+      animation: pulse-hex 4s infinite ease-in-out;
+    }
+
+    @keyframes pulse-hex {
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 8px var(--gold-glow)); }
+      50% { transform: scale(1.06); filter: drop-shadow(0 0 18px var(--gold-primary)); }
+    }
+
+    .logo-text h1 {
+      font-family: 'Cinzel', serif;
+      font-size: 24px;
+      letter-spacing: 2px;
+      background: linear-gradient(90deg, #fff, var(--gold-primary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .logo-text p {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: 'Fira Code', monospace;
+      letter-spacing: 1px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(230, 175, 46, 0.1);
+      color: var(--gold-primary);
+      border: 1px solid var(--gold-primary);
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-family: 'Fira Code', monospace;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      text-decoration: none;
+    }
+
+    .btn:hover {
+      background: var(--gold-primary);
+      color: #090a0f;
+      box-shadow: 0 0 16px var(--gold-glow);
+      transform: translateY(-1px);
+    }
+
+    .btn-cyan {
+      border-color: var(--cyan-accent);
+      color: var(--cyan-accent);
+      background: rgba(0, 229, 255, 0.08);
+    }
+
+    .btn-cyan:hover {
+      background: var(--cyan-accent);
+      color: #090a0f;
+      box-shadow: 0 0 16px rgba(0, 229, 255, 0.4);
+    }
+
+    /* Navigation Tabs */
+    .nav-tabs {
+      display: flex;
+      gap: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 8px;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-family: 'Cinzel', serif;
+      font-size: 15px;
+      letter-spacing: 1px;
+      padding: 10px 20px;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .tab-btn.active {
+      color: var(--gold-primary);
+      background: rgba(230, 175, 46, 0.12);
+      font-weight: 700;
+    }
+
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -9px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--gold-primary);
+      box-shadow: 0 0 8px var(--gold-primary);
+    }
+
+    /* Main Content Grid */
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Reader Layout */
+    .reader-grid {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 960px) {
+      .reader-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Control Panel */
+    .panel {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 14px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .panel-title {
+      font-family: 'Cinzel', serif;
+      font-size: 18px;
+      color: var(--gold-primary);
+      letter-spacing: 1px;
+      border-bottom: 1px solid rgba(230, 175, 46, 0.2);
+      padding-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 12px;
+      font-family: 'Fira Code', monospace;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    input, select, textarea {
+      background: rgba(10, 13, 20, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      color: #fff;
+      font-family: 'Fira Code', monospace;
+      padding: 10px 14px;
+      font-size: 14px;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--gold-primary);
+      box-shadow: 0 0 12px var(--gold-glow);
+    }
+
+    .coord-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    /* Book View */
+    .book-container {
+      background: var(--page-bg);
+      border: 1px solid rgba(230, 175, 46, 0.3);
+      border-radius: 14px;
+      padding: 28px;
+      position: relative;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), inset 0 0 40px rgba(0, 0, 0, 0.8);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .book-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 14px;
+    }
+
+    .coords-badge {
+      font-family: 'Fira Code', monospace;
+      font-size: 13px;
+      color: var(--gold-primary);
+      background: rgba(230, 175, 46, 0.08);
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid rgba(230, 175, 46, 0.2);
+    }
+
+    .page-turners {
+      display: flex;
+      gap: 8px;
+    }
+
+    .page-display {
+      background: #030407;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 8px;
+      padding: 24px;
+      font-family: 'Fira Code', monospace;
+      font-size: 13.5px;
+      line-height: 1.55;
+      color: #cbd5e1;
+      white-space: pre;
+      overflow-x: auto;
+      max-height: 640px;
+      overflow-y: auto;
+      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.9);
+      user-select: text;
+    }
+
+    .page-display::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    .page-display::-webkit-scrollbar-thumb {
+      background: rgba(230, 175, 46, 0.3);
+      border-radius: 4px;
+    }
+
+    .highlight-match {
+      background: rgba(230, 175, 46, 0.35);
+      color: #fff;
+      font-weight: 700;
+      padding: 2px 4px;
+      border-radius: 4px;
+      border: 1px solid var(--gold-primary);
+      box-shadow: 0 0 10px var(--gold-glow);
+    }
+
+    /* Terminal Console */
+    .terminal-box {
+      background: #050608;
+      border: 1px solid rgba(0, 229, 255, 0.3);
+      border-radius: 12px;
+      padding: 20px;
+      font-family: 'Fira Code', monospace;
+      color: #94e2d5;
+      min-height: 380px;
+      max-height: 520px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      line-height: 1.4;
+      font-size: 13px;
+      box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 229, 255, 0.1);
+    }
+
+    .terminal-input-bar {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-family: 'Fira Code', monospace;
+      color: #10b981;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+      animation: blink-dot 2s infinite ease-in-out;
+    }
+
+    @keyframes blink-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* Search results card */
+    .search-result-card {
+      background: rgba(230, 175, 46, 0.06);
+      border: 1px solid var(--gold-primary);
+      border-radius: 10px;
+      padding: 18px;
+      margin-top: 14px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="hex-canvas"></canvas>
+
+  <div class="app-container">
+
+    <!-- Header -->
+    <header>
+      <div class="logo-block">
+        <div class="hex-icon">⬡</div>
+        <div class="logo-text">
+          <h1>THE LIBRARY OF BABEL</h1>
+          <p>RASPBERRY PI PICO 2020 • DETERMINISTIC INFINITE ARCHIVE</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div class="status-badge">
+          <div class="status-dot"></div>
+          <span id="pico-status-text">USB DRIVE ACTIVE</span>
+        </div>
+        <button id="btn-ambient-audio" class="btn" title="Toggle Celestial Chords">🔊 AMBIENCE</button>
+        <button id="btn-connect-serial" class="btn btn-cyan">⚡ CONNECT PICO SERIAL</button>
+      </div>
+    </header>
+
+    <!-- Tabs Navigation -->
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('reader')">CHAMBER READER</button>
+      <button class="tab-btn" onclick="switchTab('search')">UNIVERSAL SEARCH</button>
+      <button class="tab-btn" onclick="switchTab('terminal')">HARDWARE CONSOLE</button>
+      <button class="tab-btn" onclick="switchTab('lore')">THE MANUSCRIPT</button>
+    </div>
+
+    <!-- TAB 1: CHAMBER READER -->
+    <div id="tab-reader" class="tab-content active">
+      <div class="reader-grid">
+        
+        <!-- Controls -->
+        <div class="panel">
+          <div class="panel-title">
+            <span>COORDINATE SELECTOR</span>
+            <button class="btn" style="padding: 4px 10px; font-size: 11px;" onclick="randomCoordinate()">🎲 RANDOM</button>
+          </div>
+
+          <div class="form-group">
+            <label>Hexagon Chamber (Base-36)</label>
+            <input type="text" id="input-hex" value="0">
+          </div>
+
+          <div class="coord-row">
+            <div class="form-group">
+              <label>Wall (1 - 4)</label>
+              <select id="select-wall">
+                <option value="1">Wall 1</option>
+                <option value="2">Wall 2</option>
+                <option value="3">Wall 3</option>
+                <option value="4">Wall 4</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Shelf (1 - 5)</label>
+              <select id="select-shelf">
+                <option value="1">Shelf 1</option>
+                <option value="2">Shelf 2</option>
+                <option value="3">Shelf 3</option>
+                <option value="4">Shelf 4</option>
+                <option value="5">Shelf 5</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="coord-row">
+            <div class="form-group">
+              <label>Volume (1 - 32)</label>
+              <input type="number" id="input-vol" min="1" max="32" value="1">
+            </div>
+            <div class="form-group">
+              <label>Page (1 - 410)</label>
+              <input type="number" id="input-page" min="1" max="410" value="1">
+            </div>
+          </div>
+
+          <button class="btn" style="width: 100%; justify-content: center;" onclick="loadCurrentPage()">
+            📖 OPEN BOOK
+          </button>
+
+          <div style="font-size: 11.5px; color: var(--text-muted); line-height: 1.5; font-family: 'Fira Code', monospace; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 10px;">
+            ✦ 4 Walls per Chamber<br>
+            ✦ 5 Shelves per Wall<br>
+            ✦ 32 Volumes per Shelf<br>
+            ✦ 410 Pages per Volume<br>
+            ✦ 3,200 Characters per Page
+          </div>
+        </div>
+
+        <!-- Book Display -->
+        <div class="book-container">
+          <div class="book-header">
+            <div class="coords-badge" id="current-badge">
+              HEX: 0 | W: 1 | S: 1 | V: 1 | P: 1
+            </div>
+            <div class="page-turners">
+              <button class="btn" style="padding: 6px 12px;" onclick="prevPage()">◀ PREV</button>
+              <button class="btn" style="padding: 6px 12px;" onclick="nextPage()">NEXT ▶</button>
+              <button class="btn" style="padding: 6px 12px;" onclick="copyPageText()">📋 COPY</button>
+            </div>
+          </div>
+
+          <div class="page-display" id="page-text-content">Loading library page...</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- TAB 2: UNIVERSAL SEARCH -->
+    <div id="tab-search" class="tab-content">
+      <div class="panel" style="max-width: 800px; margin: 0 auto;">
+        <div class="panel-title">
+          <span>UNIVERSAL INVERTIBLE SEARCH</span>
+        </div>
+        <p style="font-size: 13.5px; color: var(--text-muted); line-height: 1.6;">
+          Enter any sentence, poem, name, or truth. The deterministic algorithm will reverse-compute the exact hexagonal gallery, wall, shelf, volume, page, and character offset where your text exists in the library.
+        </p>
+
+        <div class="form-group">
+          <label>Target Phrase (up to 200 characters)</label>
+          <textarea id="search-query-input" rows="3" placeholder="Type anything, e.g.: The Raspberry Pi Pico contains all truths..."></textarea>
+        </div>
+
+        <button class="btn" style="justify-content: center; font-size: 15px; padding: 12px;" onclick="performSearch()">
+          🔍 COMPUTE BABEL COORDINATES
+        </button>
+
+        <div class="search-result-card" id="search-result-box">
+          <h4 style="font-family: 'Cinzel', serif; color: var(--gold-primary); margin-bottom: 10px;">LOCATION FOUND IN ARCHIVE</h4>
+          <div style="font-family: 'Fira Code', monospace; font-size: 13px; line-height: 1.8; color: var(--text-main);" id="search-result-details">
+          </div>
+          <button class="btn btn-cyan" style="margin-top: 14px;" onclick="jumpToSearchResult()">
+            🚀 JUMP TO THIS PAGE IN READER
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: HARDWARE CONSOLE -->
+    <div id="tab-terminal" class="tab-content">
+      <div class="panel">
+        <div class="panel-title">
+          <span>RASPBERRY PI PICO 2020 SERIAL CONSOLE</span>
+          <span style="font-size: 12px; font-family: 'Fira Code', monospace; color: var(--cyan-accent);">115200 BAUD</span>
+        </div>
+
+        <div class="terminal-box" id="serial-terminal">Antigravity Pico 2020 WebSerial Terminal Ready.
+Click [CONNECT PICO SERIAL] at the top right to link directly to COM12, or type commands below.
+Type 'help' for available commands.
+</div>
+
+        <div class="terminal-input-bar">
+          <input type="text" id="terminal-cmd-input" style="flex: 1;" placeholder="Enter command: search <text>, read <hex> <w> <s> <v> <p>, random, stats..." onkeydown="if(event.key==='Enter') sendTerminalCommand()">
+          <button class="btn btn-cyan" onclick="sendTerminalCommand()">SEND</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: THE MANUSCRIPT -->
+    <div id="tab-lore" class="tab-content">
+      <div class="panel" style="max-width: 900px; margin: 0 auto; line-height: 1.8; font-size: 15px;">
+        <div class="panel-title">
+          <span>JORGE LUIS BORGES: THE LIBRARY OF BABEL (1941)</span>
+        </div>
+        <p>
+          <em>"The universe (which others call the Library) is composed of an indefinite and perhaps infinite number of hexagonal galleries, with vast air shafts between, surrounded by very low railings. From any of the hexagons one can see, interminably, the upper and lower floors."</em>
+        </p>
+        <p>
+          Each wall contains five shelves; each shelf contains thirty-two books of uniform format; each book consists of four hundred and ten pages; each page, of forty lines; each line, of some eighty black letters.
+        </p>
+        <p>
+          Because all possible combinations of orthographical symbols are represented, the library contains:
+        </p>
+        <ul style="margin-left: 28px; color: var(--gold-primary);">
+          <li>The detailed history of the future</li>
+          <li>The autobiography of the archangels</li>
+          <li>The translation of every book into all languages</li>
+          <li>The true catalogue of the Library, and thousands of false catalogues</li>
+          <li>The code that executes on your Raspberry Pi Pico right now</li>
+        </ul>
+        <p>
+          This USB device turns a standard 2020 Raspberry Pi Pico into a physical portal to this infinite structure through deterministic invertible mathematics.
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    /* ==========================================================
+       DETERMINISTIC BABEL ALGORITHM (JAVASCRIPT MIRROR OF ENGINE)
+       ========================================================== */
+    const ALPHABET = " abcdefghijklmnopqrstuvwxyz0123456789,.-!?";
+    const ALPHABET_LEN = BigInt(ALPHABET.length); // 42n
+    const CHARS_PER_LINE = 80;
+    const LINES_PER_PAGE = 40;
+    const CHARS_PER_PAGE = CHARS_PER_LINE * LINES_PER_PAGE; // 3200
+
+    const A = 6364136223846793005n;
+    const C = 1442695040888963407n;
+    const CIPHER_KEY = 0x5A827999BEEFCAFEn;
+    const BASE36 = "0123456789abcdefghijklmnopqrstuvwxyz";
+
+    function cleanText(text) {
+      let res = "";
+      for (const ch of text.toLowerCase()) {
+        if (ALPHABET.includes(ch)) res += ch;
+        else if ("\r\n\t".includes(ch)) res += " ";
+        else res += " ";
+      }
+      return res.length > 0 ? res : " ";
+    }
+
+    function base36ToInt(s) {
+      s = s.trim().toLowerCase();
+      let val = 0n;
+      for (const ch of s) {
+        const idx = BASE36.indexOf(ch);
+        val = val * 36n + BigInt(idx !== -1 ? idx : ch.charCodeAt(0) % 36);
+      }
+      return val;
+    }
+
+    function intToBase36(n) {
+      if (n === 0n) return "0";
+      let digits = "";
+      let num = n < 0n ? -n : n;
+      while (num > 0n) {
+        digits = BASE36[Number(num % 36n)] + digits;
+        num /= 36n;
+      }
+      return digits || "0";
+    }
+
+    function computePageSeed(hexStr, wall, shelf, volume, page) {
+      const hInt = base36ToInt(hexStr);
+      let packed = ((hInt & 0xFFFFFFFFFFFFn) << 20n)
+        ^ (BigInt((wall - 1) & 0x3) << 18n)
+        ^ (BigInt((shelf - 1) & 0x7) << 15n)
+        ^ (BigInt((volume - 1) & 0x1F) << 10n)
+        ^ BigInt((page - 1) & 0x1FF);
+
+      let seed = (packed * A + C) & 0xFFFFFFFFFFFFFFFFn;
+      seed ^= (seed >> 21n);
+      seed = (seed * A + C) & 0xFFFFFFFFFFFFFFFFn;
+      seed ^= (seed >> 35n);
+      return seed;
+    }
+
+    function generateCharAt(seed, idx) {
+      let z = (seed + BigInt(idx) * 0x9E3779B97F4A7C15n) & 0xFFFFFFFFFFFFFFFFn;
+      z = ((z ^ (z >> 30n)) * 0xBF58476D1CE4E5B9n) & 0xFFFFFFFFFFFFFFFFn;
+      z = ((z ^ (z >> 27n)) * 0x94D049BB133111EBn) & 0xFFFFFFFFFFFFFFFFn;
+      z = z ^ (z >> 31n);
+      return ALPHABET[Number(z % ALPHABET_LEN)];
+    }
+
+    function tryDecodePayload(hexStr, wall, shelf, volume, page) {
+      try {
+        const combined = base36ToInt(hexStr) ^ CIPHER_KEY;
+        const tLen = Number(combined & 0xFFn);
+        if (tLen === 0 || tLen > 200) return null;
+
+        const core = combined >> 8n;
+        const shift = BigInt(tLen * 6);
+        const hdr = core >> shift;
+        if ((hdr >> 43n) !== 0xBAn) return null;
+
+        const hWall = Number((hdr >> 41n) & 0x3n) + 1;
+        const hShelf = Number((hdr >> 38n) & 0x7n) + 1;
+        const hVol = Number((hdr >> 33n) & 0x1Fn) + 1;
+        const hPage = Number((hdr >> 24n) & 0x1FFn) + 1;
+        const hOffset = Number((hdr >> 12n) & 0xFFFn);
+        const declaredLen = Number(hdr & 0xFFFn);
+
+        if (hWall === wall && hShelf === shelf && hVol === volume && hPage === page && declaredLen === tLen) {
+          const mask = (1n << shift) - 1n;
+          let tNum = core & mask;
+          let chars = [];
+          for (let i = 0; i < declaredLen; i++) {
+            chars.push(ALPHABET[Number(tNum % ALPHABET_LEN)]);
+            tNum /= ALPHABET_LEN;
+          }
+          return { text: chars.reverse().join(""), offset: hOffset };
+        }
+      } catch (e) {}
+      return null;
+    }
+
+    function generateBabelPage(hexStr, wall, shelf, volume, page) {
+      const seed = computePageSeed(hexStr, wall, shelf, volume, page);
+      let chars = new Array(CHARS_PER_PAGE);
+      for (let i = 0; i < CHARS_PER_PAGE; i++) {
+        chars[i] = generateCharAt(seed, i);
+      }
+
+      const embedded = tryDecodePayload(hexStr, wall, shelf, volume, page);
+      if (embedded) {
+        for (let i = 0; i < embedded.text.length; i++) {
+          if (embedded.offset + i < CHARS_PER_PAGE) {
+            chars[embedded.offset + i] = embedded.text[i];
+          }
+        }
+      }
+
+      let lines = [];
+      for (let i = 0; i < LINES_PER_PAGE; i++) {
+        lines.push(chars.slice(i * CHARS_PER_LINE, (i + 1) * CHARS_PER_LINE).join(""));
+      }
+      return { text: lines.join("\n"), embedded };
+    }
+
+    function encodePayload(text, wall, shelf, volume, page, offset) {
+      const cleaned = cleanText(text).slice(0, 200);
+      const tLen = cleaned.length;
+      const header = (0xBAn << 43n)
+        | (BigInt((wall - 1) & 0x3) << 41n)
+        | (BigInt((shelf - 1) & 0x7) << 38n)
+        | (BigInt((volume - 1) & 0x1F) << 33n)
+        | (BigInt((page - 1) & 0x1FF) << 24n)
+        | (BigInt(offset & 0xFFF) << 12n)
+        | BigInt(tLen & 0xFFF);
+
+      let textNum = 0n;
+      for (const ch of cleaned) {
+        textNum = textNum * ALPHABET_LEN + BigInt(ALPHABET.indexOf(ch));
+      }
+
+      const core = (header << BigInt(tLen * 6)) | textNum;
+      const combined = ((core << 8n) | BigInt(tLen & 0xFF)) ^ CIPHER_KEY;
+      return intToBase36(combined);
+    }
+
+    function searchBabel(query) {
+      const cleaned = cleanText(query).slice(0, 200);
+      let h = 5381n;
+      for (let i = 0; i < cleaned.length; i++) {
+        h = (((h << 5n) + h) + BigInt(cleaned.charCodeAt(i))) & 0xFFFFFFFFFFFFFFFFn;
+      }
+
+      const wall = Number(h % 4n) + 1;
+      const shelf = Number((h >> 3n) % 5n) + 1;
+      const vol = Number((h >> 6n) % 32n) + 1;
+      const page = Number((h >> 11n) % 410n) + 1;
+
+      const maxOffset = CHARS_PER_PAGE - cleaned.length;
+      const offset = maxOffset > 0 ? Number((h >> 16n) % BigInt(maxOffset + 1)) : 0;
+
+      const hexagon = encodePayload(cleaned, wall, shelf, vol, page, offset);
+      return { hexagon, wall, shelf, volume: vol, page, offset, query: cleaned };
+    }
+
+    /* ==========================================================
+       UI CONTROLLERS
+       ========================================================== */
+    let lastSearchResult = null;
+
+    function loadCurrentPage() {
+      const hex = document.getElementById("input-hex").value.trim() || "0";
+      const wall = parseInt(document.getElementById("select-wall").value);
+      const shelf = parseInt(document.getElementById("select-shelf").value);
+      const vol = parseInt(document.getElementById("input-vol").value);
+      const page = parseInt(document.getElementById("input-page").value);
+
+      document.getElementById("current-badge").innerText = 
+        `HEX: ${hex} | W: ${wall} | S: ${shelf} | V: ${vol} | P: ${page}`;
+
+      const res = generateBabelPage(hex, wall, shelf, vol, page);
+      const display = document.getElementById("page-text-content");
+
+      if (res.embedded) {
+        // Highlight embedded match
+        let raw = res.text;
+        const target = res.embedded.text;
+        const idx = raw.indexOf(target);
+        if (idx !== -1) {
+          const before = escapeHtml(raw.slice(0, idx));
+          const match = `<span class="highlight-match">${escapeHtml(target)}</span>`;
+          const after = escapeHtml(raw.slice(idx + target.length));
+          display.innerHTML = before + match + after;
+          return;
+        }
+      }
+
+      display.innerText = res.text;
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    function nextPage() {
+      const p = document.getElementById("input-page");
+      let val = parseInt(p.value) + 1;
+      if (val > 410) val = 1;
+      p.value = val;
+      loadCurrentPage();
+    }
+
+    function prevPage() {
+      const p = document.getElementById("input-page");
+      let val = parseInt(p.value) - 1;
+      if (val < 1) val = 410;
+      p.value = val;
+      loadCurrentPage();
+    }
+
+    function randomCoordinate() {
+      const rHex = Math.floor(Math.random() * 0xFFFFFFFFF).toString(36);
+      document.getElementById("input-hex").value = rHex;
+      document.getElementById("select-wall").value = Math.floor(Math.random() * 4) + 1;
+      document.getElementById("select-shelf").value = Math.floor(Math.random() * 5) + 1;
+      document.getElementById("input-vol").value = Math.floor(Math.random() * 32) + 1;
+      document.getElementById("input-page").value = Math.floor(Math.random() * 410) + 1;
+      loadCurrentPage();
+    }
+
+    function copyPageText() {
+      const txt = document.getElementById("page-text-content").innerText;
+      navigator.clipboard.writeText(txt).then(() => {
+        alert("Page text copied to clipboard!");
+      });
+    }
+
+    function performSearch() {
+      const q = document.getElementById("search-query-input").value.trim();
+      if (!q) return;
+
+      const res = searchBabel(q);
+      lastSearchResult = res;
+
+      const box = document.getElementById("search-result-box");
+      const details = document.getElementById("search-result-details");
+
+      details.innerHTML = `
+        <strong>Hexagon Chamber:</strong> ${res.hexagon}<br>
+        <strong>Wall:</strong> ${res.wall} (of 4) &nbsp;|&nbsp; 
+        <strong>Shelf:</strong> ${res.shelf} (of 5) &nbsp;|&nbsp; 
+        <strong>Volume:</strong> ${res.volume} (of 32) &nbsp;|&nbsp; 
+        <strong>Page:</strong> ${res.page} (of 410)<br>
+        <strong>Character Index:</strong> ${res.offset} / 3,200<br>
+        <strong>Exact Query:</strong> "${res.query}"
+      `;
+      box.style.display = "block";
+    }
+
+    function jumpToSearchResult() {
+      if (!lastSearchResult) return;
+      document.getElementById("input-hex").value = lastSearchResult.hexagon;
+      document.getElementById("select-wall").value = lastSearchResult.wall;
+      document.getElementById("select-shelf").value = lastSearchResult.shelf;
+      document.getElementById("input-vol").value = lastSearchResult.volume;
+      document.getElementById("input-page").value = lastSearchResult.page;
+      switchTab('reader');
+      loadCurrentPage();
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
+      document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"));
+      document.getElementById("tab-" + tabId).classList.add("active");
+
+      const btns = Array.from(document.querySelectorAll(".tab-btn"));
+      const match = btns.find(b => b.getAttribute("onclick").includes(tabId));
+      if (match) match.classList.add("active");
+    }
+
+    /* ==========================================================
+       WEBSERIAL PICO HARDWARE BRIDGE
+       ========================================================== */
+    let serialPort = null;
+    let serialReader = null;
+    let serialWriter = null;
+
+    document.getElementById("btn-connect-serial").addEventListener("click", async () => {
+      if (!("serial" in navigator)) {
+        alert("WebSerial is not supported in this browser. Please use Chrome, Edge, or Opera.");
+        return;
+      }
+      try {
+        serialPort = await navigator.serial.requestPort();
+        await serialPort.open({ baudRate: 115200 });
+
+        document.getElementById("pico-status-text").innerText = "PICO HARDWARE CONNECTED";
+        document.getElementById("pico-status-text").style.color = "var(--cyan-accent)";
+        appendTerminal("\n[HARDWARE CONNECTED VIA WEBSERIAL @ 115200 BAUD]\n");
+
+        serialWriter = serialPort.writable.getWriter();
+        readSerialLoop();
+      } catch (err) {
+        appendTerminal("\n[Connection Error]: " + err.message + "\n");
+      }
+    });
+
+    async function readSerialLoop() {
+      const textDecoder = new TextDecoderStream();
+      serialPort.readable.pipeTo(textDecoder.writable);
+      serialReader = textDecoder.readable.getReader();
+      try {
+        while (true) {
+          const { value, done } = await serialReader.read();
+          if (done) break;
+          if (value) appendTerminal(value);
+        }
+      } catch (e) {
+        appendTerminal("\n[Serial Disconnected]\n");
+      }
+    }
+
+    async function sendTerminalCommand() {
+      const input = document.getElementById("terminal-cmd-input");
+      const cmd = input.value.trim();
+      if (!cmd) return;
+      input.value = "";
+
+      appendTerminal("\n> " + cmd + "\n");
+
+      if (serialWriter) {
+        const encoder = new TextEncoder();
+        await serialWriter.write(encoder.encode(cmd + "\r\n"));
+      } else {
+        // Fallback: Local simulation in browser
+        handleLocalCommand(cmd);
+      }
+    }
+
+    function handleLocalCommand(cmd) {
+      const parts = cmd.split(" ");
+      const action = parts[0].toLowerCase();
+      if (action === "help") {
+        appendTerminal(`Commands:
+  search <text>                   - Locate phrase in library
+  read <hex> <w> <s> <v> <p>      - View 40-line page
+  random                          - Random excerpt
+  prophecy                        - Borges philosophical quote
+  stats                           - System metrics
+`);
+      } else if (action === "search") {
+        const q = parts.slice(1).join(" ");
+        const res = searchBabel(q);
+        appendTerminal(`Located in Hexagon: ${res.hexagon}\nWall ${res.wall}, Shelf ${res.shelf}, Vol ${res.volume}, Page ${res.page} (Offset ${res.offset})\n`);
+      } else if (action === "random") {
+        randomCoordinate();
+        appendTerminal("Random chamber loaded into Reader tab.\n");
+      } else {
+        appendTerminal(`Simulated response for: ${action}. Connect Pico via WebSerial for direct hardware execution.\n`);
+      }
+    }
+
+    function appendTerminal(text) {
+      const t = document.getElementById("serial-terminal");
+      t.innerText += text;
+      t.scrollTop = t.scrollHeight;
+    }
+
+    /* ==========================================================
+       ETHEREAL AMBIENT AUDIO SYNTHESIZER (WEB AUDIO API)
+       ========================================================== */
+    let audioCtx = null;
+    let isAudioPlaying = false;
+    let ambientNodes = [];
+
+    document.getElementById("btn-ambient-audio").addEventListener("click", () => {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+
+      if (!isAudioPlaying) {
+        audioCtx.resume();
+        const droneFreqs = [55, 110, 164.81, 220, 329.63]; // A1, A2, E3, A3, E4
+        droneFreqs.forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = idx % 2 === 0 ? "sine" : "triangle";
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+          gain.gain.setValueAtTime(0.015 / (idx + 1), audioCtx.currentTime);
+
+          // Subtle LFO
+          const lfo = audioCtx.createOscillator();
+          lfo.frequency.setValueAtTime(0.1 + idx * 0.05, audioCtx.currentTime);
+          const lfoGain = audioCtx.createGain();
+          lfoGain.gain.setValueAtTime(0.008, audioCtx.currentTime);
+          lfo.connect(lfoGain.gain);
+
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+
+          osc.start();
+          ambientNodes.push(osc);
+        });
+
+        isAudioPlaying = true;
+        document.getElementById("btn-ambient-audio").innerText = "🔇 MUTE";
+        document.getElementById("btn-ambient-audio").style.background = "var(--gold-primary)";
+        document.getElementById("btn-ambient-audio").style.color = "#090a0f";
+      } else {
+        ambientNodes.forEach(node => {
+          try { node.stop(); } catch(e){}
+        });
+        ambientNodes = [];
+        isAudioPlaying = false;
+        document.getElementById("btn-ambient-audio").innerText = "🔊 AMBIENCE";
+        document.getElementById("btn-ambient-audio").style.background = "rgba(230, 175, 46, 0.1)";
+        document.getElementById("btn-ambient-audio").style.color = "var(--gold-primary)";
+      }
+    });
+
+    /* ==========================================================
+       HEXAGON BACKGROUND CANVAS ANIMATION
+       ========================================================== */
+    const canvas = document.getElementById("hex-canvas");
+    const ctx = canvas.getContext("2d");
+    let width, height;
+
+    function resizeCanvas() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    function drawHex(x, y, r, alpha) {
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI / 3) * i;
+        const hx = x + r * Math.cos(angle);
+        const hy = y + r * Math.sin(angle);
+        if (i === 0) ctx.moveTo(hx, hy);
+        else ctx.lineTo(hx, hy);
+      }
+      ctx.closePath();
+      ctx.strokeStyle = `rgba(230, 175, 46, ${alpha})`;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    let time = 0;
+    function animateHex() {
+      ctx.clearRect(0, 0, width, height);
+      const r = 48;
+      const h = r * Math.sqrt(3);
+
+      for (let y = -r; y < height + r; y += h) {
+        let rowIdx = Math.floor(y / h);
+        let xOffset = (rowIdx % 2 === 0) ? 0 : r * 1.5;
+        for (let x = -r * 2; x < width + r * 2; x += r * 3) {
+          const dist = Math.hypot(x - width / 2, y - height / 2);
+          const alpha = 0.04 + 0.04 * Math.sin(dist * 0.005 - time);
+          drawHex(x + xOffset, y, r, alpha);
+        }
+      }
+
+      time += 0.015;
+      requestAnimationFrame(animateHex);
+    }
+    animateHex();
+
+    // Initial Load
+    window.addEventListener("DOMContentLoaded", () => {
+      loadCurrentPage();
+    });
+  </script>
+</body>
+</html>
