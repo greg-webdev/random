@@ -1,0 +1,39 @@
+{
+  "stats": {
+    "minecraft:used": {
+      "minecraft:crafting_table": 1,
+      "minecraft:netherite_pickaxe": 8
+    },
+    "minecraft:picked_up": {
+      "minecraft:dirt": 1,
+      "minecraft:cobblestone": 6,
+      "minecraft:wildflowers": 12
+    },
+    "minecraft:mined": {
+      "minecraft:dirt": 1,
+      "minecraft:stone": 7
+    },
+    "minecraft:custom": {
+      "minecraft:interact_with_crafting_table": 4,
+      "minecraft:time_since_rest": 4387,
+      "minecraft:walk_one_cm": 8303,
+      "minecraft:leave_game": 1,
+      "minecraft:walk_under_water_one_cm": 5641,
+      "minecraft:damage_taken": 380,
+      "minecraft:play_time": 8820,
+      "minecraft:jump": 30,
+      "minecraft:time_since_death": 4350,
+      "minecraft:fall_one_cm": 4790,
+      "minecraft:total_world_time": 13592,
+      "minecraft:fly_one_cm": 134128,
+      "minecraft:walk_on_water_one_cm": 1896,
+      "minecraft:crouch_one_cm": 170,
+      "minecraft:sneak_time": 12,
+      "minecraft:deaths": 1
+    },
+    "minecraft:crafted": {
+      "drill_mod:drill": 1
+    }
+  },
+  "DataVersion": 4671
+}

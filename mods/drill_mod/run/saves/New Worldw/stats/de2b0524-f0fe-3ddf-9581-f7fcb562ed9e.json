@@ -1,0 +1,35 @@
+{
+  "stats": {
+    "minecraft:picked_up": {
+      "minecraft:golden_hoe": 1,
+      "minecraft:lodestone": 2,
+      "minecraft:enchanted_book": 1,
+      "minecraft:stick": 19,
+      "minecraft:rail": 2,
+      "minecraft:obsidian": 2,
+      "minecraft:iron_nugget": 18,
+      "minecraft:fire_charge": 1,
+      "minecraft:flint_and_steel": 1,
+      "minecraft:cactus": 1,
+      "minecraft:golden_apple": 1
+    },
+    "minecraft:used": {
+      "minecraft:repeating_command_block": 1,
+      "minecraft:light": 10
+    },
+    "minecraft:custom": {
+      "minecraft:time_since_rest": 4815,
+      "minecraft:walk_one_cm": 839,
+      "minecraft:leave_game": 1,
+      "minecraft:total_world_time": 6657,
+      "minecraft:fly_one_cm": 115764,
+      "minecraft:walk_on_water_one_cm": 173,
+      "minecraft:crouch_one_cm": 278,
+      "minecraft:sneak_time": 55,
+      "minecraft:play_time": 4815,
+      "minecraft:jump": 5,
+      "minecraft:time_since_death": 4815
+    }
+  },
+  "DataVersion": 4671
+}

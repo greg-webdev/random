@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "D": "minecraft:diamond",
+    "I": "minecraft:iron_ingot"
+  },
+  "pattern": [
+    "D",
+    "I",
+    "I"
+  ],
+  "result": {
+    "count": 1,
+    "id": "locked_chest:key"
+  }
+}

@@ -1,0 +1,16 @@
+/give Player899 minecraft:netherite_pickaxe
+/give Player899 minecraft:copper_ingot 2
+/give Player899 minecraft:iron_ingot 3
+/give Player899 minecraft:redstone 3
+/give Player899 minecraft:crafting_table
+/give Player899 chest 2
+/give Player899 minecraft:copper_ingot 1
+/give Player899 minecraft:cobblestone 6400
+/summon minecraft:lightning_bolt
+/enchant Player315 drill_mod:range 3
+/enchant Player315 drill_mod:savedrill
+/effect give Player315 minecraft:night_vision infinite 255 true
+/enchant Player331 drill_mod:indestructible 1
+/enchant Player360 drill_mod:range 3
+/enchant Player360 drill_mod:indestructible
+/enchant Player360 drill_mod:savedrill

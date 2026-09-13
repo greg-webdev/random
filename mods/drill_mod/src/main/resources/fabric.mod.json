@@ -1,0 +1,29 @@
+{
+	"schemaVersion": 1,
+	"id": "drill_mod",
+	"version": "${version}",
+	"name": "Drill Mod",
+	"description": "Powerful Drill Mod for Minecraft 1.21.11 with infinite storage, flight centering, and smelt enchantment.",
+	"authors": [
+		"geg"
+	],
+	"license": "MIT",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.drillmod.DrillMod"
+		],
+		"client": [
+			"com.drillmod.client.DrillModClient"
+		]
+	},
+	"mixins": [
+		"drill_mod.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.19.3",
+		"minecraft": "~1.21.11",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "R": "minecraft:redstone",
+    "D": "minecraft:diamond"
+  },
+  "pattern": [
+    "R",
+    "D",
+    "D"
+  ],
+  "result": {
+    "count": 1,
+    "id": "locked_chest:master_key"
+  }
+}

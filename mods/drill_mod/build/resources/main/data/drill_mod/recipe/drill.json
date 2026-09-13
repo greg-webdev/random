@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "I": "minecraft:iron_ingot",
+    "C": "minecraft:chest",
+    "R": "minecraft:redstone",
+    "U": "minecraft:copper_ingot"
+  },
+  "pattern": [
+    "IIC",
+    "IRU",
+    "CUU"
+  ],
+  "result": {
+    "count": 1,
+    "id": "drill_mod:drill"
+  }
+}

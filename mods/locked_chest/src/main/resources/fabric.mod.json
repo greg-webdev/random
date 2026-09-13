@@ -1,0 +1,23 @@
+{
+	"schemaVersion": 1,
+	"id": "locked_chest",
+	"version": "${version}",
+	"name": "Locked Chest Mod",
+	"description": "Locked Chest Mod for Minecraft 1.21.11 with custom craftable keys and secure iron-plated chests.",
+	"authors": [
+		"geg"
+	],
+	"license": "MIT",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.lockedchest.LockedChestMod"
+		]
+	},
+	"depends": {
+		"fabricloader": ">=0.19.3",
+		"minecraft": "~1.21.11",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}

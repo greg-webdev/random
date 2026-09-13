@@ -1,0 +1,34 @@
+{
+  "stats": {
+    "minecraft:custom": {
+      "minecraft:time_since_rest": 15217,
+      "minecraft:walk_one_cm": 22008,
+      "minecraft:leave_game": 1,
+      "minecraft:walk_under_water_one_cm": 16049,
+      "minecraft:play_time": 15217,
+      "minecraft:damage_dealt": 10,
+      "minecraft:jump": 74,
+      "minecraft:time_since_death": 15217,
+      "minecraft:drop": 3,
+      "minecraft:sprint_one_cm": 14,
+      "minecraft:open_chest": 7,
+      "minecraft:total_world_time": 17340,
+      "minecraft:fly_one_cm": 205964,
+      "minecraft:interact_with_anvil": 1,
+      "minecraft:walk_on_water_one_cm": 3479
+    },
+    "minecraft:used": {
+      "minecraft:chest": 7,
+      "minecraft:anvil": 1
+    },
+    "minecraft:picked_up": {
+      "minecraft:wildflowers": 2,
+      "minecraft:chest": 64,
+      "minecraft:arrow": 2
+    },
+    "minecraft:dropped": {
+      "minecraft:chest": 192
+    }
+  },
+  "DataVersion": 4671
+}

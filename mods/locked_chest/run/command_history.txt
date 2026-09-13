@@ -1,0 +1,5 @@
+/give @a locked_chest:master_key
+/give @a locked_chest:key
+/give Player297 locked_chest:master_key
+/clear
+/give @a locked_chest:key

@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "building",
+  "ingredients": [
+    "minecraft:chest",
+    "minecraft:iron_block"
+  ],
+  "result": {
+    "count": 1,
+    "id": "locked_chest:locked_chest"
+  }
+}

@@ -1,0 +1,16 @@
+{
+	"required": true,
+	"minVersion": "0.8",
+	"package": "com.drillmod.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"mixins": [
+		"PlayerDamageMixin",
+		"ItemStackMixin"
+	],
+	"client": [
+		"MinecraftClientMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

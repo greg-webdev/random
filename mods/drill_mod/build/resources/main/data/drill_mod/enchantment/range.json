@@ -1,0 +1,20 @@
+{
+  "anvil_cost": 3,
+  "description": {
+    "translate": "enchantment.drill_mod.range"
+  },
+  "max_cost": {
+    "base": 65,
+    "per_level_above_first": 15
+  },
+  "max_level": 3,
+  "min_cost": {
+    "base": 15,
+    "per_level_above_first": 10
+  },
+  "slots": [
+    "mainhand"
+  ],
+  "supported_items": "#drill_mod:enchantable/drill",
+  "weight": 4
+}

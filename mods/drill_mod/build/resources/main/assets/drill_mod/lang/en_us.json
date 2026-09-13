@@ -1,0 +1,13 @@
+{
+  "item.drill_mod.drill": "Industrial Drill",
+  "itemGroup.drill_mod.drill_tab": "Drill Mod",
+  "enchantment.drill_mod.smelt": "Smelt",
+  "enchantment.drill_mod.smelt.desc": "Grants a 10% chance per level to autosmelt mined materials directly into the Drill's infinite inventory.",
+  "enchantment.drill_mod.range": "Range",
+  "enchantment.drill_mod.range.desc": "Increases the excavation size of the drill by x1.25 with each level (up to Level III).",
+  "enchantment.drill_mod.savedrill": "Save Drill",
+  "enchantment.drill_mod.savedrill.desc": "Automatically preserves and backs up the drill's inventory. If the drill breaks, you can restore all stored items into a new drill!",
+  "enchantment.drill_mod.indestructible": "Indestructible",
+  "enchantment.drill_mod.indestructible.desc": "Makes the drill completely indestructible with an oscillating visual durability resonance.",
+  "container.drill_mod.drill_menu": "Drill Storage"
+}

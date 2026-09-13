@@ -1,0 +1,7 @@
+{
+  "block.locked_chest.locked_chest": "Locked Chest",
+  "item.locked_chest.key": "Key",
+  "item.locked_chest.master_key": "Master Key",
+  "itemGroup.locked_chest.locked_chest_tab": "Locked Chests",
+  "container.locked_chest.locked_chest": "Locked Chest"
+}
