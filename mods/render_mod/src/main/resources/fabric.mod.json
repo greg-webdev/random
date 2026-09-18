@@ -1,0 +1,26 @@
+{
+	"schemaVersion": 1,
+	"id": "render_mod",
+	"version": "${version}",
+	"name": "60 FPS Render & World Recorder",
+	"description": "Enables lag-free 60 FPS offline rendering during extreme events (like 100k TNT explosions), saves renders as playable worlds directly accessible from the Main Menu.",
+	"authors": [
+		"Author"
+	],
+	"license": "MIT",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.rendermod.RenderMod"
+		],
+		"client": [
+			"com.rendermod.client.RenderModClient"
+		]
+	},
+	"depends": {
+		"fabricloader": ">=0.19.3",
+		"minecraft": "~1.21.11",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}

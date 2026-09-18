@@ -1,0 +1,8 @@
+{
+  "feature": "oneblock_skyblock:skyblock_island",
+  "placement": [
+    {
+      "type": "minecraft:biome"
+    }
+  ]
+}

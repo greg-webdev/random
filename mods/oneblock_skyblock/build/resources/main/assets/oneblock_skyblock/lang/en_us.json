@@ -1,0 +1,8 @@
+{
+  "generator.oneblock_skyblock.oneblock": "OneBlock",
+  "generator.oneblock_skyblock.oneblock.info": "Survive in the void with a single infinitely regenerating block that advances through phases!",
+  "generator.oneblock_skyblock.skyblock": "Skyblock",
+  "generator.oneblock_skyblock.skyblock.info": "Classic Skyblock survival in an infinite void with starting island, tree, and chest!",
+  "item.oneblock_skyblock.one_block": "OneBlock Spawner",
+  "itemGroup.oneblock_skyblock.tab": "OneBlock & Skyblock"
+}

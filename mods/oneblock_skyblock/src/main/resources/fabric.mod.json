@@ -1,0 +1,23 @@
+{
+	"schemaVersion": 1,
+	"id": "oneblock_skyblock",
+	"version": "${version}",
+	"name": "OneBlock & Skyblock",
+	"description": "Create OneBlock and Skyblock worlds right from the World Generation Type menu with full progression and regenerating block!",
+	"authors": [
+		"Author"
+	],
+	"license": "MIT",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.oneblockskyblock.OneBlockSkyblockMod"
+		]
+	},
+	"depends": {
+		"fabricloader": ">=0.19.3",
+		"minecraft": "~1.21.11",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}

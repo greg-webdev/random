@@ -1,0 +1,13 @@
+{
+	"required": true,
+	"minVersion": "0.8",
+	"package": "com.worldmanager.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"mixins": [
+		"WorldGenContextMixin",
+		"ChunkMapMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

@@ -1,0 +1,13 @@
+{
+  "oneBlockX": 0,
+  "oneBlockY": 64,
+  "oneBlockZ": 0,
+  "totalMined": 110,
+  "currentPhase": 2,
+  "initialized": false,
+  "oneBlockWorld": false,
+  "skyblockWorld": false,
+  "customBlockPositions": [
+    "0,64,0"
+  ]
+}

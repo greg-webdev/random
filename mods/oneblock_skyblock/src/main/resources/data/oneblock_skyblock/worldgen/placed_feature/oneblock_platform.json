@@ -1,0 +1,8 @@
+{
+  "feature": "oneblock_skyblock:oneblock_platform",
+  "placement": [
+    {
+      "type": "minecraft:biome"
+    }
+  ]
+}

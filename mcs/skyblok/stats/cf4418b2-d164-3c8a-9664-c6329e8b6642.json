@@ -1,0 +1,100 @@
+{
+  "stats": {
+    "minecraft:custom": {
+      "minecraft:talked_to_villager": 22,
+      "minecraft:time_since_rest": 81289,
+      "minecraft:walk_one_cm": 298812,
+      "minecraft:leave_game": 10,
+      "minecraft:walk_under_water_one_cm": 12657,
+      "minecraft:mob_kills": 168,
+      "minecraft:damage_taken": 20000836,
+      "minecraft:play_time": 229306,
+      "minecraft:damage_dealt": 448,
+      "minecraft:jump": 213,
+      "minecraft:time_since_death": 81247,
+      "minecraft:drop": 3,
+      "minecraft:sprint_one_cm": 255732,
+      "minecraft:open_chest": 17,
+      "minecraft:fall_one_cm": 46147,
+      "minecraft:total_world_time": 229306,
+      "minecraft:swim_one_cm": 16560,
+      "minecraft:fly_one_cm": 1662536,
+      "minecraft:walk_on_water_one_cm": 9206,
+      "minecraft:crouch_one_cm": 409,
+      "minecraft:sneak_time": 196,
+      "minecraft:climb_one_cm": 16,
+      "minecraft:deaths": 4,
+      "minecraft:player_kills": 16
+    },
+    "minecraft:dropped": {
+      "oneblock_skyblock:one_block": 64
+    },
+    "minecraft:mined": {
+      "minecraft:oak_leaves": 6,
+      "minecraft:chest": 2,
+      "minecraft:clay": 1,
+      "minecraft:pumpkin": 1,
+      "minecraft:oak_log": 7,
+      "minecraft:grass_block": 1,
+      "minecraft:coarse_dirt": 2
+    },
+    "minecraft:killed_by": {
+      "minecraft:player": 2,
+      "minecraft:zombie": 1
+    },
+    "minecraft:picked_up": {
+      "minecraft:dirt": 36,
+      "minecraft:stick": 1,
+      "minecraft:poppy": 2,
+      "minecraft:coarse_dirt": 8,
+      "minecraft:chicken": 1,
+      "minecraft:bone": 3,
+      "minecraft:arrow": 5,
+      "minecraft:oak_sapling": 1,
+      "minecraft:beef": 1,
+      "minecraft:rotten_flesh": 9,
+      "minecraft:apple": 1,
+      "minecraft:string": 2,
+      "minecraft:oak_log": 13,
+      "minecraft:clay_ball": 20,
+      "minecraft:melon_slice": 12,
+      "minecraft:birch_log": 3,
+      "minecraft:slime_ball": 24,
+      "minecraft:chest": 2,
+      "minecraft:gunpowder": 1,
+      "minecraft:pumpkin": 4
+    },
+    "minecraft:used": {
+      "minecraft:stone_axe": 12,
+      "minecraft:stone": 23,
+      "minecraft:grass_block": 17,
+      "laser_weapons:laser_emitter": 19,
+      "minecraft:repeater": 1,
+      "minecraft:lever": 1,
+      "oneblock_skyblock:one_block": 1,
+      "minecraft:spruce_pressure_plate": 3,
+      "minecraft:redstone": 12,
+      "minecraft:glass_pane": 1,
+      "minecraft:command_block": 3,
+      "minecraft:cobblestone": 18
+    },
+    "minecraft:killed": {
+      "minecraft:slime": 29,
+      "minecraft:skeleton": 32,
+      "minecraft:villager": 1,
+      "minecraft:player": 16,
+      "minecraft:bat": 6,
+      "minecraft:ender_dragon": 1,
+      "minecraft:spider": 14,
+      "minecraft:zombie": 38,
+      "minecraft:horse": 1,
+      "minecraft:warden": 6,
+      "minecraft:creeper": 24,
+      "minecraft:zombie_villager": 2,
+      "minecraft:chicken": 2,
+      "minecraft:enderman": 1,
+      "minecraft:cow": 4
+    }
+  },
+  "DataVersion": 4671
+}

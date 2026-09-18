@@ -1,0 +1,26 @@
+{
+	"schemaVersion": 1,
+	"id": "world_manager",
+	"version": "1.0.0",
+	"name": "World Manager",
+	"description": "Server-side world manager mod providing /world set (skyblock v1, skyblock v2, oneblock, flat, standard), slow chunk unloading, per-world inventory saving (/world inv single|all), and safe infinite OneBlock progression.",
+	"authors": [
+		"Author"
+	],
+	"license": "MIT",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.worldmanager.WorldManagerMod"
+		]
+	},
+	"mixins": [
+		"world_manager.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.19.3",
+		"minecraft": "~1.21.11",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}
