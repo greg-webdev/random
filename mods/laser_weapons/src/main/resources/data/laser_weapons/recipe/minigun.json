@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "B": "minecraft:iron_block",
+    "I": "minecraft:iron_ingot",
+    "R": "minecraft:redstone_block",
+    "L": "minecraft:lever"
+  },
+  "pattern": [
+    "BIB",
+    "IRI",
+    " L "
+  ],
+  "result": {
+    "count": 1,
+    "id": "laser_weapons:minigun"
+  }
+}

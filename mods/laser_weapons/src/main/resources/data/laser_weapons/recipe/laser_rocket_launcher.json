@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "I": "minecraft:iron_ingot",
+    "R": "minecraft:redstone_block",
+    "T": "minecraft:tnt",
+    "B": "minecraft:blaze_rod"
+  },
+  "pattern": [
+    "IRI",
+    "ITI",
+    " B "
+  ],
+  "result": {
+    "count": 1,
+    "id": "laser_weapons:laser_rocket_launcher"
+  }
+}

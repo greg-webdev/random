@@ -48,6 +48,78 @@ ACCENT_PURPLE = "#8b5cf6"    # Media & File transfer accent
 HOVER_ROW = "#383842"        # Row hover/select
 
 
+class VisualProgressBar(tk.Frame):
+    """High-contrast Canvas Progress Bar with bold embedded percentage and telemetry text."""
+    def __init__(self, parent, height=22, bg_color=BG_SURFACE, fill_color=ACCENT_PURPLE, border_color=BORDER_COLOR, **kwargs):
+        super().__init__(parent, bg=BG_CARD, **kwargs)
+        self.bar_height = height
+        self.fill_color = fill_color
+        self.bg_color = bg_color
+        self.border_color = border_color
+        self.value = 0.0
+        self.current_text = "0%"
+
+        self.canvas = tk.Canvas(
+            self,
+            height=height,
+            bg=bg_color,
+            highlightthickness=1,
+            highlightbackground=border_color,
+            relief="flat"
+        )
+        self.canvas.pack(fill=tk.X, expand=True)
+        self.canvas.bind("<Configure>", lambda e: self.redraw())
+
+    def set_value(self, pct, custom_text=None):
+        self.value = max(0.0, min(100.0, float(pct)))
+        if custom_text is not None:
+            self.current_text = str(custom_text)
+        else:
+            self.current_text = f"{int(self.value)}%"
+        self.redraw()
+
+    def redraw(self):
+        self.canvas.delete("all")
+        w = self.canvas.winfo_width()
+        h = self.canvas.winfo_height()
+        if w <= 2:
+            w = self.winfo_width() or 400
+        if h <= 2:
+            h = self.bar_height
+
+        fill_w = int(w * (self.value / 100.0))
+        if fill_w > 0:
+            self.canvas.create_rectangle(0, 0, fill_w, h, fill=self.fill_color, outline="")
+
+        cx, cy = w // 2, h // 2
+        # Text drop-shadow
+        self.canvas.create_text(cx + 1, cy + 1, text=self.current_text, fill="#0f172a", font=("Segoe UI", 9, "bold"))
+        self.canvas.create_text(cx, cy, text=self.current_text, fill="#ffffff", font=("Segoe UI", 9, "bold"))
+
+
+class ProgressReader:
+    """Wraps bytes to report streaming upload progress to a callback on each chunk read."""
+    def __init__(self, data_bytes, callback):
+        self._bio = io.BytesIO(data_bytes)
+        self._total = len(data_bytes)
+        self._sent = 0
+        self._cb = callback
+
+    def read(self, size=-1):
+        chunk = self._bio.read(size)
+        if chunk:
+            self._sent += len(chunk)
+            if self._cb:
+                try:
+                    self._cb(self._sent, self._total)
+                except Exception:
+                    pass
+        return chunk
+
+    def __len__(self):
+        return self._total
+
+
 class RemoteFolderBrowserDialog(tk.Toplevel):
     def __init__(self, parent, server_ip, server_port, initial_path="", on_select_callback=None):
         super().__init__(parent)
@@ -237,6 +309,22 @@ class RemoteFolderBrowserDialog(tk.Toplevel):
         )
         chk_save.pack(side=tk.LEFT)
 
+        btn_delete = tk.Button(
+            action_row,
+            text="🗑️ Delete Item",
+            font=("Segoe UI", 9),
+            bg=BG_SURFACE,
+            fg=ACCENT_RED,
+            activebackground=BORDER_COLOR,
+            activeforeground=ACCENT_RED,
+            relief="flat",
+            padx=12,
+            pady=4,
+            cursor="hand2",
+            command=self.delete_selected_item
+        )
+        btn_delete.pack(side=tk.LEFT, padx=(8, 0))
+
         btn_cancel = tk.Button(
             action_row,
             text="Cancel",
@@ -392,6 +480,35 @@ class RemoteFolderBrowserDialog(tk.Toplevel):
             self.on_select_callback(chosen, self.save_to_places_var.get())
         self.destroy()
 
+    def delete_selected_item(self):
+        chosen = self.selected_path_var.get().strip()
+        if not chosen or chosen.startswith("[") or chosen.startswith("("):
+            messagebox.showinfo("No Selection", "Please select a file or folder to delete.", parent=self)
+            return
+
+        confirm = messagebox.askyesno(
+            "Confirm Delete",
+            f"Are you sure you want to permanently delete:\n\n'{chosen}'\n\non remote server ({self.server_ip})?",
+            parent=self
+        )
+        if not confirm:
+            return
+
+        url = f"http://{self.server_ip}:{self.server_port}/api/delete"
+        payload = json.dumps({"path": chosen}).encode("utf-8")
+
+        def _worker():
+            try:
+                req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
+                with urllib.request.urlopen(req, timeout=10) as resp:
+                    res = json.loads(resp.read().decode("utf-8"))
+                    self.after(0, lambda: messagebox.showinfo("Deleted", f"Deleted:\n{chosen}", parent=self))
+                    self.after(0, lambda: self.navigate_to(self.current_path))
+            except Exception as e:
+                self.after(0, lambda err=str(e): messagebox.showerror("Delete Error", f"Failed deleting:\n{err}", parent=self))
+
+        threading.Thread(target=_worker, daemon=True).start()
+
 
 class RemoteTaskManagerClient(BaseTkClass):
     def __init__(self):
@@ -448,6 +565,7 @@ class RemoteTaskManagerClient(BaseTkClass):
 
         # File manager state
         self.selected_file_path = tk.StringVar(value="")
+        self.selected_files_list = []
         initial_dest = self.saved_destinations[0] if self.saved_destinations else "C:\\Users\\LENOVO\\Downloads"
         self.server_dest_dir = tk.StringVar(value=initial_dest)
         self.dest_mode_var = tk.StringVar(value="direct")
@@ -562,6 +680,116 @@ class RemoteTaskManagerClient(BaseTkClass):
             self.add_saved_destination(chosen_path)
         self.status_text.set(f"Selected server destination: {chosen_path}")
 
+    def _resolve_paths_and_folders(self, raw_paths):
+        """
+        Recursively expands files and folders into a flattened list of items with relative paths.
+        Supports up to 150 files per transfer batch while preserving folder hierarchies.
+        """
+        resolved_items = []
+        seen_abs = set()
+
+        for raw_p in raw_paths:
+            p = raw_p.strip("{}").strip('"\'').strip()
+            p = os.path.normpath(p)
+            if not os.path.exists(p):
+                continue
+
+            if os.path.isdir(p):
+                parent_dir = os.path.dirname(p)
+                for root, dirs, files in os.walk(p):
+                    for fname in files:
+                        full_f = os.path.normpath(os.path.join(root, fname))
+                        if full_f in seen_abs:
+                            continue
+                        seen_abs.add(full_f)
+                        rel_f = os.path.relpath(full_f, parent_dir)
+                        try:
+                            f_sz = os.path.getsize(full_f)
+                        except Exception:
+                            f_sz = 0
+                        resolved_items.append({
+                            "abs_path": full_f,
+                            "rel_path": rel_f,
+                            "filename": fname,
+                            "size": f_sz
+                        })
+                        if len(resolved_items) >= 150:
+                            break
+                    if len(resolved_items) >= 150:
+                        break
+            elif os.path.isfile(p):
+                if p in seen_abs:
+                    continue
+                seen_abs.add(p)
+                fname = os.path.basename(p)
+                try:
+                    f_sz = os.path.getsize(p)
+                except Exception:
+                    f_sz = 0
+                resolved_items.append({
+                    "abs_path": p,
+                    "rel_path": fname,
+                    "filename": fname,
+                    "size": f_sz
+                })
+
+            if len(resolved_items) >= 150:
+                break
+
+        return resolved_items
+
+    def _set_selected_files(self, items):
+        self.selected_files_list = items
+        total_count = len(items)
+        if total_count == 0:
+            self.selected_file_path.set("")
+            self.drop_box.configure(
+                text="📂 CLICK HERE TO BROWSE FILE(S) OR FOLDER  (Or Drag & Drop up to 150 files/folders directly here)",
+                fg=ACCENT_PURPLE
+            )
+            return
+
+        def _fmt(sz):
+            return f"{round(sz / 1024, 1)} KB" if sz < 1024*1024 else f"{round(sz / (1024*1024), 2)} MB"
+
+        total_bytes = sum(item.get("size", 0) for item in items)
+        total_sz_str = _fmt(total_bytes)
+        capped_notice = " (Capped at 150 max)" if total_count >= 150 else ""
+
+        if total_count == 1:
+            single = items[0]
+            self.selected_file_path.set(single["abs_path"])
+            self.drop_box.configure(
+                text=f"✅ 1 FILE READY TO SEND:\n\n{single['rel_path']}\n({total_sz_str})\n\nClick '🚀 Send File(s) to Server Now' below",
+                fg=ACCENT_GREEN
+            )
+            self.status_text.set(f"Selected: {single['rel_path']} ({total_sz_str})")
+        else:
+            first_few = ", ".join(item["rel_path"] for item in items[:3])
+            if total_count > 3:
+                first_few += f" +{total_count - 3} more"
+            self.selected_file_path.set(f"{total_count} items{capped_notice} ({total_sz_str}): {first_few}")
+
+            box_text = f"✅ {total_count} ITEMS READY TO SEND{capped_notice} ({total_sz_str}):\n\n"
+            for item in items[:4]:
+                box_text += f"• {item['rel_path']} ({_fmt(item.get('size', 0))})\n"
+            if total_count > 4:
+                box_text += f"• ...and {total_count - 4} more files (batch size up to 150)\n"
+            box_text += "\nClick '🚀 Send File(s) to Server Now' below"
+
+            self.drop_box.configure(text=box_text, fg=ACCENT_GREEN)
+            self.status_text.set(f"Selected {total_count} files/folder items{capped_notice} ({total_sz_str})")
+
+        if hasattr(self, "upload_progress"):
+            self.upload_progress.set_value(0, f"Ready ({total_count} items)")
+        if hasattr(self, "lbl_progress_status"):
+            self.lbl_progress_status.configure(text=f"Upload Status: Ready to transfer {total_count} item(s){capped_notice}", fg=TEXT_PRIMARY)
+        if hasattr(self, "lbl_progress_detail"):
+            self.lbl_progress_detail.configure(text=f"{total_count} items ({total_sz_str})")
+        if hasattr(self, "lbl_killed_apps_info"):
+            self.lbl_killed_apps_info.pack_forget()
+            self.lbl_killed_apps_info.configure(text="")
+
     def _on_file_dropped(self, event):
         try:
             raw_data = getattr(event, "data", "")
@@ -576,19 +804,9 @@ class RemoteTaskManagerClient(BaseTkClass):
                 matches = re.findall(r'\{([^}]+)\}|(\S+)', raw_data)
                 files = [m[0] or m[1] for m in matches if m[0] or m[1]]
 
-            for raw_f in files:
-                f = raw_f.strip("{}").strip('"\'').strip()
-                f = os.path.normpath(f)
-                if os.path.exists(f) and os.path.isfile(f):
-                    self.selected_file_path.set(f)
-                    sz = os.path.getsize(f)
-                    sz_str = f"{round(sz / 1024, 1)} KB" if sz < 1024*1024 else f"{round(sz / (1024*1024), 2)} MB"
-                    self.drop_box.configure(
-                        text=f"✅ FILE READY TO SEND:\n\n{os.path.basename(f)}\n({sz_str})\n\nClick '🚀 Send File to Server Now' below",
-                        fg=ACCENT_GREEN
-                    )
-                    self.status_text.set(f"Selected file: {os.path.basename(f)} ({sz_str})")
-                    break
+            items = self._resolve_paths_and_folders(files)
+            if items:
+                self._set_selected_files(items)
         except Exception as e:
             print(f"[DND_ERROR] {e}")
 
@@ -638,6 +856,17 @@ class RemoteTaskManagerClient(BaseTkClass):
 
         # Scrollbar
         self.style.configure("Vertical.TScrollbar", background=BG_SURFACE, troughcolor=BG_DARK, borderwidth=0)
+
+        # Progressbar
+        self.style.configure(
+            "Horizontal.TProgressbar",
+            troughcolor=BG_SURFACE,
+            background=ACCENT_PURPLE,
+            bordercolor=BORDER_COLOR,
+            lightcolor=ACCENT_PURPLE,
+            darkcolor=ACCENT_PURPLE,
+            thickness=12
+        )
 
     def _build_header(self):
         header_frame = tk.Frame(self, bg=BG_DARK, pady=10, padx=16)
@@ -986,26 +1215,27 @@ class RemoteTaskManagerClient(BaseTkClass):
         rb2.pack(anchor="w", pady=(4, 0))
 
         # Drag and Drop / File Selection Zone
-        file_card = tk.Frame(container, bg=BG_CARD, highlightbackground=BORDER_COLOR, highlightthickness=1, padx=16, pady=16)
+        # Drag and Drop / File Selection Zone
+        file_card = tk.Frame(container, bg=BG_CARD, highlightbackground=BORDER_COLOR, highlightthickness=1, padx=14, pady=12)
         file_card.pack(fill=tk.BOTH, expand=True)
 
-        tk.Label(file_card, text="2. Select File to Send:", font=("Segoe UI", 10, "bold"), fg=TEXT_PRIMARY, bg=BG_CARD).pack(anchor="w", pady=(0, 8))
+        tk.Label(file_card, text="2. Select File(s) to Send:", font=("Segoe UI", 10, "bold"), fg=TEXT_PRIMARY, bg=BG_CARD).pack(anchor="w", pady=(0, 6))
 
-        # Big clickable & drop-friendly target box
+        # Compact clickable & drop-friendly target box (does not push down progress)
         self.drop_box = tk.Label(
             file_card,
-            text="📂 CLICK HERE TO BROWSE FILE\n\n(Or Drag & Drop file directly into this box)",
-            font=("Segoe UI", 11, "bold"),
+            text="📂 CLICK HERE TO BROWSE FILE(S)  (Or Drag & Drop multiple files directly into this box)",
+            font=("Segoe UI", 10, "bold"),
             fg=ACCENT_PURPLE,
             bg=BG_SURFACE,
             highlightbackground=ACCENT_PURPLE,
             highlightthickness=2,
             relief="flat",
             cursor="hand2",
-            padx=20,
-            pady=36
+            padx=16,
+            pady=12
         )
-        self.drop_box.pack(fill=tk.BOTH, expand=True, pady=6)
+        self.drop_box.pack(fill=tk.X, pady=(0, 6))
         self.drop_box.bind("<Button-1>", lambda e: self.browse_local_file())
         if HAS_DND:
             for w in (self, container, file_card, self.drop_box):
@@ -1015,21 +1245,105 @@ class RemoteTaskManagerClient(BaseTkClass):
                 except Exception:
                     pass
 
+        # Buttons for selecting Files or entire Folders
+        browse_row = tk.Frame(file_card, bg=BG_CARD)
+        browse_row.pack(fill=tk.X, pady=(0, 6))
+
+        tk.Button(
+            browse_row,
+            text="📂 Select Files...",
+            font=("Segoe UI", 9, "bold"),
+            bg=BG_SURFACE,
+            fg=TEXT_PRIMARY,
+            activebackground=BORDER_COLOR,
+            activeforeground=TEXT_PRIMARY,
+            relief="flat",
+            padx=12,
+            pady=4,
+            cursor="hand2",
+            command=self.browse_local_file
+        ).pack(side=tk.LEFT, padx=(0, 6))
+
+        tk.Button(
+            browse_row,
+            text="📁 Select Entire Folder...",
+            font=("Segoe UI", 9, "bold"),
+            bg=BG_SURFACE,
+            fg=TEXT_PRIMARY,
+            activebackground=BORDER_COLOR,
+            activeforeground=TEXT_PRIMARY,
+            relief="flat",
+            padx=12,
+            pady=4,
+            cursor="hand2",
+            command=self.browse_local_folder
+        ).pack(side=tk.LEFT)
+
+        tk.Label(
+            browse_row,
+            text="Supports dragging files or whole folders (up to 150 items)",
+            font=("Segoe UI", 8),
+            fg=TEXT_SECONDARY,
+            bg=BG_CARD
+        ).pack(side=tk.RIGHT)
+
         # Selected file display
         sel_row = tk.Frame(file_card, bg=BG_CARD)
-        sel_row.pack(fill=tk.X, pady=8)
+        sel_row.pack(fill=tk.X, pady=(2, 4))
 
-        tk.Label(sel_row, text="Selected File:", font=("Segoe UI", 9, "bold"), fg=TEXT_SECONDARY, bg=BG_CARD).pack(side=tk.LEFT)
+        tk.Label(sel_row, text="Selected File(s):", font=("Segoe UI", 9, "bold"), fg=TEXT_SECONDARY, bg=BG_CARD).pack(side=tk.LEFT)
         self.lbl_selected_file = tk.Label(sel_row, textvariable=self.selected_file_path, font=("Segoe UI", 9), fg=ACCENT_GREEN, bg=BG_CARD)
         self.lbl_selected_file.pack(side=tk.LEFT, padx=8)
 
+        # High-Visibility Live Progress Section (ALWAYS VISIBLE, 24px Canvas Bar)
+        self.prog_container = tk.Frame(file_card, bg=BG_SURFACE, highlightbackground=BORDER_COLOR, highlightthickness=1, padx=12, pady=8)
+        self.prog_container.pack(fill=tk.X, pady=(4, 6))
+
+        prog_top_row = tk.Frame(self.prog_container, bg=BG_SURFACE)
+        prog_top_row.pack(fill=tk.X, pady=(0, 3))
+
+        self.lbl_progress_status = tk.Label(
+            prog_top_row,
+            text="Upload Status: Ready to transfer",
+            font=("Segoe UI", 9, "bold"),
+            fg=TEXT_PRIMARY,
+            bg=BG_SURFACE
+        )
+        self.lbl_progress_status.pack(side=tk.LEFT)
+
+        self.lbl_progress_detail = tk.Label(
+            prog_top_row,
+            text="0 files queued",
+            font=("Segoe UI", 9),
+            fg=TEXT_SECONDARY,
+            bg=BG_SURFACE
+        )
+        self.lbl_progress_detail.pack(side=tk.RIGHT)
+
+        self.upload_progress = VisualProgressBar(self.prog_container, height=24, fill_color="#8b5cf6", bg_color="#18181b")
+        self.upload_progress.pack(fill=tk.X, pady=(2, 0))
+
+        # Killed App notification banner (appears when server had to kill a conflicting app to release a locked file)
+        self.lbl_killed_apps_info = tk.Label(
+            file_card,
+            text="",
+            font=("Segoe UI", 9, "bold"),
+            fg="#facc15",
+            bg=BG_SURFACE,
+            padx=12,
+            pady=8,
+            justify=tk.LEFT,
+            wraplength=750,
+            relief="flat"
+        )
+
         # Send Button
         btn_row = tk.Frame(file_card, bg=BG_CARD)
-        btn_row.pack(fill=tk.X, pady=(8, 0))
+        btn_row.pack(fill=tk.X, pady=(6, 0))
 
         self.btn_start_upload = tk.Button(
             btn_row,
-            text="🚀 Send File to Server Now",
+            text="🚀 Send File(s) to Server Now",
             font=("Segoe UI", 10, "bold"),
             bg=ACCENT_PURPLE,
             fg="#ffffff",
@@ -1044,34 +1358,55 @@ class RemoteTaskManagerClient(BaseTkClass):
         self.btn_start_upload.pack(side=tk.RIGHT)
 
     def browse_local_file(self):
-        f = filedialog.askopenfilename(title="Select File to Transfer", parent=self)
-        if f:
-            f = os.path.normpath(f.strip().strip('"\''))
-            self.selected_file_path.set(f)
-            sz = os.path.getsize(f)
-            sz_str = f"{round(sz / 1024, 1)} KB" if sz < 1024*1024 else f"{round(sz / (1024*1024), 2)} MB"
-            self.drop_box.configure(
-                text=f"✅ FILE READY TO SEND:\n\n{os.path.basename(f)}\n({sz_str})\n\nClick '🚀 Send File to Server Now' below",
-                fg=ACCENT_GREEN
-            )
-            self.status_text.set(f"Selected file: {os.path.basename(f)} ({sz_str})")
+        files = filedialog.askopenfilenames(title="Select File(s) to Transfer (up to 150)", parent=self)
+        if files:
+            items = self._resolve_paths_and_folders(files)
+            if items:
+                self._set_selected_files(items)
+
+    def browse_local_folder(self):
+        folder = filedialog.askdirectory(title="Select Folder to Transfer (up to 150 files)", parent=self)
+        if folder:
+            items = self._resolve_paths_and_folders([folder])
+            if items:
+                self._set_selected_files(items)
 
     def execute_file_upload(self):
         if not self.is_connected:
             messagebox.showwarning("Not Connected", "Please connect to the remote server first.", parent=self)
             return
 
-        file_path = self.selected_file_path.get().strip().strip('"\'')
-        if not file_path or not os.path.exists(file_path):
-            messagebox.showinfo("No File Selected", "Please select or drop a file to send first.", parent=self)
+        raw_items = getattr(self, "selected_files_list", [])
+        if not raw_items:
+            single = self.selected_file_path.get().strip().strip('"\'')
+            if single and os.path.exists(single):
+                raw_items = self._resolve_paths_and_folders([single])
+
+        if not raw_items:
+            messagebox.showinfo("No Files Selected", "Please select or drop file(s) or folder(s) to send first.", parent=self)
             return
 
-        filename = os.path.basename(file_path)
-        try:
-            file_size = os.path.getsize(file_path)
-            sz_str = f"{round(file_size / 1024, 1)} KB" if file_size < 1024*1024 else f"{round(file_size / (1024*1024), 2)} MB"
-        except Exception:
-            sz_str = ""
+        # Ensure elements are dictionaries with valid files
+        valid_items = []
+        for it in raw_items:
+            if isinstance(it, dict):
+                p = it.get("abs_path", "")
+                if p and os.path.exists(p) and os.path.isfile(p):
+                    valid_items.append(it)
+            elif isinstance(it, str) and os.path.exists(it) and os.path.isfile(it):
+                valid_items.append({
+                    "abs_path": it,
+                    "rel_path": os.path.basename(it),
+                    "filename": os.path.basename(it),
+                    "size": os.path.getsize(it)
+                })
+
+        if not valid_items:
+            messagebox.showerror("File Error", "Selected file(s) no longer exist on disk.", parent=self)
+            return
+
+        total_files = min(len(valid_items), 150)
+        valid_items = valid_items[:150]
 
         ip = self.server_ip.get().strip()
         port = self.server_port.get().strip()
@@ -1080,56 +1415,130 @@ class RemoteTaskManagerClient(BaseTkClass):
         is_prompt = (self.dest_mode_var.get() == "prompt")
         target_dir = self.server_dest_dir.get().strip() if not is_prompt else None
 
-        self.status_text.set(f"Preparing '{filename}' ({sz_str})...")
-        self.btn_start_upload.configure(state="disabled", text="Uploading...")
+        self.btn_start_upload.configure(state="disabled", text=f"Uploading (0/{total_files})...")
+        self.upload_progress.set_value(0, f"0% — Starting upload (0/{total_files})")
+        self.lbl_progress_status.configure(text=f"Uploading {total_files} item(s)...", fg=TEXT_PRIMARY)
+        self.lbl_progress_detail.configure(text=f"0 of {total_files} completed")
+        self.lbl_killed_apps_info.pack_forget()
+        self.lbl_killed_apps_info.configure(text="")
+
+        def _fmt(sz):
+            return f"{round(sz / 1024, 1)} KB" if sz < 1024*1024 else f"{round(sz / (1024*1024), 2)} MB"
 
         def _worker():
-            try:
-                self.after(0, lambda: self.status_text.set(f"Reading '{filename}' ({sz_str})..."))
-                with open(file_path, "rb") as f:
-                    raw_bytes = f.read()
+            success_files = []
+            failed_files = []
+            all_killed_apps = []
 
-                self.after(0, lambda: self.status_text.set(f"Encoding '{filename}'..."))
-                b64_str = base64.b64encode(raw_bytes).decode("utf-8")
+            for idx, item in enumerate(valid_items):
+                file_path = item["abs_path"]
+                rel_path = item.get("rel_path") or item["filename"]
+                filename = item["filename"]
+                file_size = item.get("size", 0)
+                sz_str = _fmt(file_size)
 
-                payload = {
-                    "filename": filename,
-                    "data": b64_str,
-                    "prompt_on_server": is_prompt
-                }
-                if target_dir:
-                    payload["target_dir"] = target_dir
+                self.after(0, lambda i=idx, rp=rel_path, s=sz_str: (
+                    self.lbl_progress_status.configure(text=f"Uploading ({i+1}/{total_files}): '{rp}' ({s})", fg=TEXT_PRIMARY),
+                    self.lbl_progress_detail.configure(text=f"{i} of {total_files} completed"),
+                    self.status_text.set(f"Uploading ({i+1}/{total_files}): '{rp}' ({s})..."),
+                    self.btn_start_upload.configure(text=f"Uploading ({i+1}/{total_files})...")
+                ))
 
-                payload_bytes = json.dumps(payload).encode("utf-8")
-
-                self.after(0, lambda: self.status_text.set(f"Sending '{filename}' ({sz_str}) to server..."))
-                req = urllib.request.Request(
-                    url,
-                    data=payload_bytes,
-                    headers={"Content-Type": "application/json"}
-                )
-                with urllib.request.urlopen(req, timeout=180) as resp:
-                    res = json.loads(resp.read().decode("utf-8"))
-                    saved = res.get("saved_path", "")
-                    self.after(0, lambda: messagebox.showinfo(
-                        "Transfer Complete",
-                        f"File '{filename}' successfully placed on server at:\n\n{saved}",
-                        parent=self
-                    ))
-                    self.after(0, lambda: self.status_text.set(f"File transferred: {saved}"))
-            except urllib.error.HTTPError as he:
                 try:
-                    err_body = json.loads(he.read().decode("utf-8"))
-                    err_msg = err_body.get("error", str(he))
-                except Exception:
-                    err_msg = str(he)
-                self.after(0, lambda m=err_msg: messagebox.showerror("Transfer Failed", f"Server error: {m}", parent=self))
-                self.after(0, lambda m=err_msg: self.status_text.set(f"Upload failed: {m}"))
-            except Exception as e:
-                self.after(0, lambda err=str(e): messagebox.showerror("Transfer Failed", f"Failed: {err}", parent=self))
-                self.after(0, lambda err=str(e): self.status_text.set(f"Upload failed: {err}"))
-            finally:
-                self.after(0, lambda: self.btn_start_upload.configure(state="normal", text="🚀 Send File to Server Now"))
+                    with open(file_path, "rb") as f:
+                        raw_bytes = f.read()
+
+                    b64_str = base64.b64encode(raw_bytes).decode("utf-8")
+                    payload = {
+                        "filename": filename,
+                        "rel_path": rel_path,
+                        "data": b64_str,
+                        "prompt_on_server": is_prompt
+                    }
+                    if target_dir:
+                        payload["target_dir"] = target_dir
+
+                    payload_bytes = json.dumps(payload).encode("utf-8")
+
+                    # Streaming chunk progress callback
+                    def _on_chunk(sent, total, i=idx, rp=rel_path):
+                        frac = sent / max(1, total)
+                        overall_pct = ((i + frac) / total_files) * 100
+                        sent_mb = round(sent / (1024 * 1024), 2)
+                        tot_mb = round(total / (1024 * 1024), 2)
+                        txt = f"{int(overall_pct)}% — ({i+1}/{total_files}) {rp} [{sent_mb} / {tot_mb} MB]"
+                        self.after(0, lambda p=overall_pct, t=txt: self.upload_progress.set_value(p, t))
+
+                    reader = ProgressReader(payload_bytes, _on_chunk)
+                    req = urllib.request.Request(
+                        url,
+                        data=reader,
+                        headers={
+                            "Content-Type": "application/json",
+                            "Content-Length": str(len(payload_bytes))
+                        }
+                    )
+                    with urllib.request.urlopen(req, timeout=300) as resp:
+                        res = json.loads(resp.read().decode("utf-8"))
+                        saved = res.get("saved_path", "")
+                        killed = res.get("killed_procs", [])
+                        if killed:
+                            all_killed_apps.extend(killed)
+                        success_files.append((rel_path, saved, killed))
+
+                except Exception as e:
+                    failed_files.append((rel_path, str(e)))
+
+                overall_step = int(((idx + 1) / total_files) * 100)
+                txt_step = f"{overall_step}% — ({idx+1}/{total_files}) {rel_path} Done"
+                self.after(0, lambda p=overall_step, t=txt_step: self.upload_progress.set_value(p, t))
+
+            def _finish_ui():
+                self.btn_start_upload.configure(state="normal", text="🚀 Send File(s) to Server Now")
+                self.upload_progress.set_value(100, f"✅ 100% — Transferred {len(success_files)} item(s)!")
+                self.lbl_progress_detail.configure(text=f"{len(success_files)}/{total_files} successful")
+
+                unique_killed = list(dict.fromkeys(all_killed_apps))
+                if unique_killed:
+                    killed_msg = "⚡ Server automatically closed conflicting application(s) to replace locked file(s):\n" + "\n".join(f"  • {app}" for app in unique_killed)
+                    self.lbl_killed_apps_info.configure(text=killed_msg)
+                    self.lbl_killed_apps_info.pack(fill=tk.X, pady=(6, 0))
+
+                if failed_files and not success_files:
+                    err_lines = "\n".join(f"• {fn}: {err}" for fn, err in failed_files[:10])
+                    if len(failed_files) > 10:
+                        err_lines += f"\n...and {len(failed_files) - 10} more errors"
+                    messagebox.showerror("Upload Failed", f"Failed uploading {len(failed_files)} file(s):\n\n{err_lines}", parent=self)
+                    self.lbl_progress_status.configure(text=f"❌ Upload failed ({len(failed_files)} errors)", fg=ACCENT_RED)
+                    self.status_text.set(f"Upload failed for {len(failed_files)} file(s)")
+                elif failed_files:
+                    err_lines = "\n".join(f"• {fn}: {err}" for fn, err in failed_files[:10])
+                    if len(failed_files) > 10:
+                        err_lines += f"\n...and {len(failed_files) - 10} more errors"
+                    msg = f"Transferred {len(success_files)}/{total_files} items successfully.\n\nErrors encountered:\n{err_lines}"
+                    if unique_killed:
+                        msg += "\n\nConflicting apps terminated by server:\n" + "\n".join(f"• {app}" for app in unique_killed)
+                    messagebox.showwarning("Partial Upload", msg, parent=self)
+                    self.lbl_progress_status.configure(text=f"⚠️ {len(success_files)} uploaded, {len(failed_files)} failed", fg=ACCENT_YELLOW)
+                    self.status_text.set(f"Upload completed with {len(failed_files)} failure(s)")
+                else:
+                    self.lbl_progress_status.configure(text=f"✅ All {total_files} item(s) transferred successfully!", fg=ACCENT_GREEN)
+                    self.status_text.set(f"Successfully uploaded {total_files} item(s) to server")
+
+                    dialog_msg = f"Successfully transferred {total_files} item(s) to server!"
+                    if total_files == 1:
+                        dialog_msg = f"File '{success_files[0][0]}' successfully placed at:\n\n{success_files[0][1]}"
+                    else:
+                        dialog_msg = f"All {total_files} items successfully placed at server destination!\n\nSample items transferred:\n" + "\n".join(f"• {f[0]}" for f in success_files[:8])
+                        if len(success_files) > 8:
+                            dialog_msg += f"\n...and {len(success_files) - 8} more items"
+
+                    if unique_killed:
+                        dialog_msg += "\n\n⚠️ Conflicting application(s) terminated by server to release file lock(s):\n" + "\n".join(f"• {app}" for app in unique_killed)
+
+                    messagebox.showinfo("Transfer Complete", dialog_msg, parent=self)
+
+            self.after(0, _finish_ui)
 
         threading.Thread(target=_worker, daemon=True).start()
 
@@ -1342,7 +1751,84 @@ class RemoteTaskManagerClient(BaseTkClass):
             pady=5,
             cursor="hand2",
             command=self.remote_wake
+        ).pack(side=tk.LEFT, padx=(0, 4))
+
+        tk.Button(
+            power_row,
+            text="🔇 Mute Audio",
+            font=("Segoe UI", 9, "bold"),
+            bg="#374151",
+            fg="#ffffff",
+            activebackground="#4b5563",
+            activeforeground="#ffffff",
+            relief="flat",
+            padx=10,
+            pady=5,
+            cursor="hand2",
+            command=self.toggle_remote_sound
         ).pack(side=tk.LEFT)
+
+        # Card 3: Remote Text Typing (50ms/char delay)
+        typing_card = tk.Frame(container, bg=BG_CARD, highlightbackground=BORDER_COLOR, highlightthickness=1, padx=16, pady=16)
+        typing_card.pack(fill=tk.X, pady=(16, 0))
+
+        tk.Label(typing_card, text="⌨️ Remote Keystroke Typing (50ms Keystroke Delay)", font=("Segoe UI", 10, "bold"), fg=TEXT_PRIMARY, bg=BG_CARD).pack(anchor="w")
+        tk.Label(
+            typing_card,
+            text="Type or paste text below, then click Send. The server will type it into whatever window is currently active with a 50ms delay between keystrokes.",
+            font=("Segoe UI", 9),
+            fg=TEXT_SECONDARY,
+            bg=BG_CARD
+        ).pack(anchor="w", pady=(2, 8))
+
+        type_input_row = tk.Frame(typing_card, bg=BG_CARD)
+        type_input_row.pack(fill=tk.X)
+
+        self.remote_text_entry = tk.Entry(
+            type_input_row,
+            font=("Segoe UI", 10),
+            bg=BG_SURFACE,
+            fg=TEXT_PRIMARY,
+            insertbackground=TEXT_PRIMARY,
+            relief="flat"
+        )
+        self.remote_text_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 10), ipady=5)
+        self.remote_text_entry.bind("<Return>", lambda e: self.send_remote_text())
+
+        self.btn_send_typing = tk.Button(
+            type_input_row,
+            text="▶ Send & Type (50ms)",
+            font=("Segoe UI", 9, "bold"),
+            bg=ACCENT_BLUE,
+            fg="#ffffff",
+            activebackground="#2563eb",
+            activeforeground="#ffffff",
+            relief="flat",
+            padx=16,
+            pady=5,
+            cursor="hand2",
+            command=self.send_remote_text
+        )
+        self.btn_send_typing.pack(side=tk.RIGHT)
+
+        # Live Keystroke Progress Bar (VisualProgressBar)
+        self.typing_prog_frame = tk.Frame(typing_card, bg=BG_CARD)
+        self.typing_prog_frame.pack(fill=tk.X, pady=(8, 0))
+
+        typing_prog_header = tk.Frame(self.typing_prog_frame, bg=BG_CARD)
+        typing_prog_header.pack(fill=tk.X, pady=(0, 2))
+
+        self.lbl_typing_status = tk.Label(
+            typing_prog_header,
+            text="Typing Status: Ready",
+            font=("Segoe UI", 9),
+            fg=TEXT_SECONDARY,
+            bg=BG_CARD
+        )
+        self.lbl_typing_status.pack(side=tk.LEFT)
+
+        self.typing_progress = VisualProgressBar(self.typing_prog_frame, height=20, fill_color=ACCENT_BLUE, bg_color=BG_SURFACE)
+        self.typing_progress.pack(fill=tk.X)
 
     def browse_local_video(self):
         f = filedialog.askopenfilename(
@@ -1546,6 +2032,86 @@ class RemoteTaskManagerClient(BaseTkClass):
                 self.after(0, lambda: messagebox.showerror("Wake Failed", f"Could not send Wake-on-LAN packet:\n{e}"))
 
         threading.Thread(target=_send_wol, args=(self.server_mac,), daemon=True).start()
+
+    def toggle_remote_sound(self):
+        if not self.is_connected:
+            messagebox.showwarning("Not Connected", "Please connect to the remote server first.")
+            return
+        ip = self.server_ip.get().strip()
+        port = self.server_port.get().strip()
+        url = f"http://{ip}:{port}/api/sound"
+        payload = json.dumps({"action": "toggle"}).encode("utf-8")
+
+        def _worker():
+            try:
+                req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
+                with urllib.request.urlopen(req, timeout=5) as resp:
+                    res = json.loads(resp.read().decode("utf-8"))
+                    self.after(0, lambda: self.status_text.set("🔇 Server audio mute toggled"))
+            except Exception as e:
+                self.after(0, lambda: messagebox.showerror("Sound Error", f"Failed toggling audio: {e}"))
+
+        threading.Thread(target=_worker, daemon=True).start()
+
+    def send_remote_text(self):
+        if not self.is_connected:
+            messagebox.showwarning("Not Connected", "Please connect to the remote server first.")
+            return
+
+        text = self.remote_text_entry.get()
+        if not text:
+            messagebox.showinfo("No Text", "Please enter text to type on the remote server.")
+            return
+
+        total_chars = len(text)
+        ip = self.server_ip.get().strip()
+        port = self.server_port.get().strip()
+        url = f"http://{ip}:{port}/api/type"
+        payload = json.dumps({"text": text, "delay": 0.05}).encode("utf-8")
+
+        self.btn_send_typing.configure(state="disabled", text=f"Typing (0/{total_chars})...")
+        if hasattr(self, "typing_progress"):
+            self.typing_progress.set_value(0, f"0% (0/{total_chars} keys)")
+        if hasattr(self, "lbl_typing_status"):
+            self.lbl_typing_status.configure(text=f"Typing {total_chars} characters on server (50ms/key)...", fg=ACCENT_BLUE)
+        self.status_text.set(f"Sending and typing {total_chars} characters on server (50ms/key)...")
+
+        def _worker():
+            try:
+                req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
+                with urllib.request.urlopen(req, timeout=120) as resp:
+                    res = json.loads(resp.read().decode("utf-8"))
+
+                # Live lockstep ticker character-by-character at 50ms intervals
+                for i in range(1, total_chars + 1):
+                    time.sleep(0.05)
+                    pct = (i / total_chars) * 100
+                    ch = text[i - 1]
+                    ch_display = repr(ch) if ch not in ('\n', ' ', '\t') else ('[ENTER]' if ch == '\n' else ('[TAB]' if ch == '\t' else '[SPACE]'))
+                    bar_txt = f"{int(pct)}% — Key {i}/{total_chars}: {ch_display}"
+                    self.after(0, lambda p=pct, t=bar_txt, idx=i: (
+                        hasattr(self, "typing_progress") and self.typing_progress.set_value(p, t),
+                        hasattr(self, "lbl_typing_status") and self.lbl_typing_status.configure(text=f"Typing key {idx}/{total_chars} on server (50ms delay)...", fg=ACCENT_BLUE),
+                        self.btn_send_typing.configure(text=f"Typing ({idx}/{total_chars})...")
+                    ))
+
+                self.after(0, lambda: (
+                    self.remote_text_entry.delete(0, tk.END),
+                    hasattr(self, "typing_progress") and self.typing_progress.set_value(100, f"✅ 100% — Finished typing {total_chars} characters!"),
+                    hasattr(self, "lbl_typing_status") and self.lbl_typing_status.configure(text=f"✅ Successfully typed all {total_chars} characters on server", fg=ACCENT_GREEN),
+                    self.status_text.set(f"Finished typing {total_chars} characters on server")
+                ))
+            except Exception as e:
+                self.after(0, lambda err=str(e): (
+                    hasattr(self, "typing_progress") and self.typing_progress.set_value(0, "Error"),
+                    hasattr(self, "lbl_typing_status") and self.lbl_typing_status.configure(text=f"Typing failed: {err}", fg=ACCENT_RED),
+                    messagebox.showerror("Typing Error", f"Failed typing text on server: {err}"),
+                    self.status_text.set(f"Typing failed: {err}")
+                ))
+            finally:
+                self.after(0, lambda: self.btn_send_typing.configure(state="normal", text="▶ Send & Type (50ms)"))
+
+        threading.Thread(target=_worker, daemon=True).start()
 
     # -----------------------------
     # TAB 4: Live Camera Stream

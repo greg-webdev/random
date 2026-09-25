@@ -1,11 +1,24 @@
 import os
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
 import sys
 import subprocess
 import shutil
 import imageio_ffmpeg
 
-# 1. Locate static FFmpeg executable
-ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+try:
+    ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+except Exception:
+    import glob
+    candidates = glob.glob(os.path.expandvars(r"%LOCALAPPDATA%\Packages\PythonSoftwareFoundation.Python.3.13_*\LocalCache\local-packages\Python313\site-packages\imageio_ffmpeg\binaries\ffmpeg*.exe"))
+    ffmpeg_exe = candidates[0] if candidates else None
+
+if not ffmpeg_exe or not os.path.exists(ffmpeg_exe):
+    raise RuntimeError(f"Could not locate ffmpeg executable: {ffmpeg_exe}")
+
+os.environ["IMAGEIO_FFMPEG_EXE"] = ffmpeg_exe
 print(f"[*] Found static FFmpeg executable: {ffmpeg_exe} (Exists: {os.path.exists(ffmpeg_exe)}, Size: {os.path.getsize(ffmpeg_exe)} bytes)")
 
 # 2. Locate Hand Landmarker model
@@ -14,7 +27,13 @@ print(f"[*] Hand Landmarker model: {hand_task} (Exists: {os.path.exists(hand_tas
 
 # 3. Terminate running server processes before build
 try:
-    subprocess.run('powershell -Command "Stop-Process -Name RemoteTaskManagerServer* -Force -ErrorAction SilentlyContinue"', shell=True)
+    import psutil
+    for p in psutil.process_iter(['name']):
+        if p.info['name'] and 'RemoteTaskManager' in p.info['name']:
+            try:
+                p.kill()
+            except Exception:
+                pass
 except Exception:
     pass
 
@@ -24,11 +43,16 @@ cmd = [
     "--noconsole",
     "--name", "RemoteTaskManagerServer",
     "--collect-all", "imageio_ffmpeg",
-    "--collect-all", "mediapipe",
+    "--collect-data", "mediapipe",
+    "--collect-binaries", "mediapipe",
     "--paths", "server",
     "--hidden-import", "pystray._win32",
     "--hidden-import", "PIL",
     "--hidden-import", "cv2",
+    "--hidden-import", "mediapipe",
+    "--hidden-import", "mediapipe.tasks",
+    "--hidden-import", "mediapipe.tasks.python",
+    "--hidden-import", "mediapipe.tasks.python.vision",
     "--hidden-import", "gesture_detector",
     "--hidden-import", "server.gesture_detector",
     "--add-binary", f"{ffmpeg_exe};.",

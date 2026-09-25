@@ -9,6 +9,7 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.MenuScreens;
+import net.minecraft.network.protocol.game.ServerboundChatCommandPacket;
 
 public class UtilityCommandsClient implements ClientModInitializer {
 	@Override
@@ -25,9 +26,12 @@ public class UtilityCommandsClient implements ClientModInitializer {
 				.then(ClientCommandManager.argument("command", StringArgumentType.greedyString())
 					.executes(context -> {
 						String cmd = StringArgumentType.getString(context, "command").trim();
+						if (cmd.startsWith("/")) {
+							cmd = cmd.substring(1).trim();
+						}
 						Minecraft mc = Minecraft.getInstance();
-						if (mc.getConnection() != null) {
-							mc.getConnection().sendCommand("cmd2 " + cmd);
+						if (mc.getConnection() != null && !cmd.isEmpty()) {
+							mc.getConnection().send(new ServerboundChatCommandPacket("cmd2 " + cmd));
 						}
 						return 1;
 					}))

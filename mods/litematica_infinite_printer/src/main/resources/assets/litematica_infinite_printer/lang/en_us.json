@@ -1,0 +1,7 @@
+{
+  "key.categories.litematica_infinite_printer": "Litematica Infinite Printer",
+  "key.litematica_infinite_printer.toggle": "Toggle Printer (ON/OFF)",
+  "key.litematica_infinite_printer.toggle_break": "Toggle Auto-Break",
+  "key.litematica_infinite_printer.toggle_reach": "Toggle Infinite Reach",
+  "key.litematica_infinite_printer.open_gui": "Open Printer Settings GUI"
+}

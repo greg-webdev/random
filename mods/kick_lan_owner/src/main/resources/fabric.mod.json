@@ -1,0 +1,29 @@
+{
+	"schemaVersion": 1,
+	"id": "kick_lan_owner",
+	"version": "${version}",
+	"name": "Kick LAN Owner",
+	"description": "Adds commands and functionality allowing players to kick the LAN game owner from the game.",
+	"authors": [
+		"Antigravity"
+	],
+	"license": "MIT",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.kicklanowner.KickLanOwnerMod"
+		],
+		"client": [
+			"com.kicklanowner.client.KickLanOwnerClient"
+		]
+	},
+	"mixins": [
+		"kick_lan_owner.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.19.3",
+		"minecraft": "~1.21.11",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}

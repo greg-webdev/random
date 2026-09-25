@@ -29,8 +29,13 @@ public class Cmd2Command {
 	private static int executeSilent(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
 		ServerPlayer player = context.getSource().getPlayerOrException();
 		String commandToRun = StringArgumentType.getString(context, "command").trim();
-		if (commandToRun.startsWith("/")) {
-			commandToRun = commandToRun.substring(1);
+		while (commandToRun.startsWith("/") || commandToRun.startsWith("cmd2 ")) {
+			if (commandToRun.startsWith("/")) {
+				commandToRun = commandToRun.substring(1).trim();
+			}
+			if (commandToRun.startsWith("cmd2 ")) {
+				commandToRun = commandToRun.substring(5).trim();
+			}
 		}
 
 		if (commandToRun.isEmpty()) {

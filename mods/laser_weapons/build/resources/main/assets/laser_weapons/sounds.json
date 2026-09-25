@@ -1,0 +1,32 @@
+{
+  "gun_shot": {
+    "subtitle": "subtitles.laser_weapons.gun_shot",
+    "sounds": [
+      "laser_weapons:gunshot"
+    ]
+  },
+  "gunshot": {
+    "subtitle": "subtitles.laser_weapons.gun_shot",
+    "sounds": [
+      "laser_weapons:gunshot"
+    ]
+  },
+  "rocket_fire": {
+    "subtitle": "subtitles.laser_weapons.rocket_fire",
+    "sounds": [
+      "laser_weapons:rocket_fire"
+    ]
+  },
+  "laser_explosion": {
+    "subtitle": "subtitles.laser_weapons.laser_explosion",
+    "sounds": [
+      "laser_weapons:laser_explosion"
+    ]
+  },
+  "laser_hum": {
+    "subtitle": "subtitles.laser_weapons.laser_hum",
+    "sounds": [
+      "laser_weapons:laser_hum"
+    ]
+  }
+}

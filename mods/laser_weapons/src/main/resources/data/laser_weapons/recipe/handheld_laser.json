@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "I": "minecraft:iron_ingot",
+    "R": "minecraft:redstone",
+    "A": "minecraft:amethyst_shard",
+    "D": "minecraft:diamond"
+  },
+  "pattern": [
+    "IAI",
+    "IDI",
+    " R "
+  ],
+  "result": {
+    "count": 1,
+    "id": "laser_weapons:handheld_laser"
+  }
+}

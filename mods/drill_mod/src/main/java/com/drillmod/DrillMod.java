@@ -43,6 +43,12 @@ public class DrillMod implements ModInitializer {
 	public static final String MOD_ID = "drill_mod";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
+	static {
+		if (System.getProperty("voxy.geometryBufferSizeOverrideMB") == null) {
+			System.setProperty("voxy.geometryBufferSizeOverrideMB", "1024");
+		}
+	}
+
 	// Drill Item Registration
 	public static final ResourceKey<Item> DRILL_KEY = ResourceKey.create(
 		Registries.ITEM,

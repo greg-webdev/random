@@ -8,6 +8,7 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ServerboundChatCommandPacket;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
@@ -109,7 +110,7 @@ public class HiddenCommandRunnerScreen extends Screen {
 
 		Minecraft mc = Minecraft.getInstance();
 		if (mc.getConnection() != null) {
-			mc.getConnection().sendCommand("cmd2 " + cmd);
+			mc.getConnection().send(new ServerboundChatCommandPacket("cmd2 " + cmd));
 		}
 
 		this.commandInput.setValue("");

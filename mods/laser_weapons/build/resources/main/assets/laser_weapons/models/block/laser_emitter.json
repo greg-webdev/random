@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "down": "laser_weapons:block/laser_emitter_bottom",
+    "up": "laser_weapons:block/laser_emitter_top",
+    "north": "laser_weapons:block/laser_emitter_side",
+    "south": "laser_weapons:block/laser_emitter_side",
+    "east": "laser_weapons:block/laser_emitter_side",
+    "west": "laser_weapons:block/laser_emitter_side",
+    "particle": "laser_weapons:block/laser_emitter_side"
+  }
+}

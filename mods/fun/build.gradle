@@ -13,6 +13,14 @@ repositories {
 loom {
 	splitEnvironmentSourceSets()
 
+	runs {
+		client {
+			vmArg "-Xmx2G"
+			vmArg "-Xms512M"
+			vmArg "-XX:+UseG1GC"
+		}
+	}
+
 	mods {
 		"funstuff" {
 			sourceSet sourceSets.main

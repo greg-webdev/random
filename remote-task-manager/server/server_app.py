@@ -448,6 +448,12 @@ class ServerRequestHandler(BaseHTTPRequestHandler):
             self.handle_gesture(payload, client_ip)
         elif path == "/api/power":
             self.handle_power(payload, client_ip)
+        elif path == "/api/type":
+            self.handle_type(payload, client_ip)
+        elif path == "/api/sound":
+            self.handle_sound(payload, client_ip)
+        elif path == "/api/delete":
+            self.handle_delete(payload, client_ip)
         else:
             self._send_json(404, {"error": f"Endpoint not found: {path}"})
 
@@ -606,8 +612,47 @@ class ServerRequestHandler(BaseHTTPRequestHandler):
         except Exception as e:
             self._send_json(500, {"error": str(e)})
 
+    @staticmethod
+    def _force_remove_file(dest_path):
+        if not os.path.exists(dest_path):
+            return True, "File did not exist", []
+        target_norm = os.path.normcase(os.path.abspath(dest_path))
+        try:
+            os.remove(dest_path)
+            return True, "Removed cleanly", []
+        except PermissionError:
+            pass
+        except Exception as e:
+            return False, str(e), []
+
+        # File is in use - find and kill locking processes
+        killed_procs = []
+        if psutil:
+            current_pid = os.getpid()
+            for p in psutil.process_iter(['pid', 'name']):
+                if p.pid == current_pid:
+                    continue
+                try:
+                    for of in p.open_files():
+                        if os.path.normcase(os.path.abspath(of.path)) == target_norm:
+                            p_name = p.name()
+                            p_pid = p.pid
+                            p.kill()
+                            killed_procs.append(f"{p_name} (PID {p_pid})")
+                            break
+                except Exception:
+                    continue
+
+        time.sleep(0.3)
+        try:
+            os.remove(dest_path)
+            return True, f"Killed {killed_procs} and removed file", killed_procs
+        except Exception as e:
+            return False, f"Failed removing after killing {killed_procs}: {e}", killed_procs
+
     def handle_upload(self, payload, client_ip):
         filename = payload.get("filename")
+        rel_path = payload.get("rel_path") or filename
         data_b64 = payload.get("data")
         target_dir = payload.get("target_dir")  # Optional: specific directory requested by client
         prompt_mode = payload.get("prompt_on_server", False)
@@ -622,18 +667,33 @@ class ServerRequestHandler(BaseHTTPRequestHandler):
             self._send_json(400, {"error": f"Invalid base64 data: {e}"})
             return
 
-        self._log_event(f"[UPLOAD] Incoming file '{filename}' ({round(len(file_bytes)/1024, 1)} KB) from {client_ip}")
+        # Securely sanitize rel_path to prevent directory traversal
+        clean_rel = os.path.normpath(str(rel_path)).lstrip("\\/").replace("..", "")
+        if not clean_rel or clean_rel == ".":
+            clean_rel = filename
+
+        self._log_event(f"[UPLOAD] Incoming file '{clean_rel}' ({round(len(file_bytes)/1024, 1)} KB) from {client_ip}")
 
         # If client specified a target directory on server
         if target_dir and isinstance(target_dir, str) and target_dir.strip():
             td = os.path.expandvars(target_dir.strip().strip('"\''))
             try:
-                os.makedirs(td, exist_ok=True)
-                dest = os.path.join(td, filename)
+                dest = os.path.join(td, clean_rel)
+                os.makedirs(os.path.dirname(dest), exist_ok=True)
+                ok, msg, killed = self._force_remove_file(dest)
+                if not ok:
+                    self._log_event(f"[UPLOAD WARNING] Could not delete existing '{dest}': {msg}")
                 with open(dest, "wb") as f:
                     f.write(file_bytes)
-                self._log_event(f"[UPLOAD] Saved to target directory: '{dest}'")
-                self._send_json(200, {"success": True, "saved_path": dest})
+                self._log_event(f"[UPLOAD] Saved to target directory: '{dest}' (Killed locking apps: {killed})")
+                self._send_json(200, {
+                    "success": True,
+                    "saved_path": dest,
+                    "filename": filename,
+                    "rel_path": clean_rel,
+                    "killed_procs": killed,
+                    "message": f"Killed locking app(s): {', '.join(killed)}" if killed else "Saved"
+                })
                 return
             except Exception as e:
                 self._log_event(f"[UPLOAD] Failed writing to target directory '{td}': {e}. Falling back to Downloads.")
@@ -644,7 +704,7 @@ class ServerRequestHandler(BaseHTTPRequestHandler):
             saved_path = gui.prompt_save_file(filename, file_bytes)
             if saved_path:
                 self._log_event(f"[UPLOAD] Saved via server prompt to '{saved_path}'")
-                self._send_json(200, {"success": True, "saved_path": saved_path})
+                self._send_json(200, {"success": True, "saved_path": saved_path, "filename": filename, "rel_path": clean_rel, "killed_procs": []})
                 return
             else:
                 self._log_event(f"[UPLOAD] User cancelled destination selection on server")
@@ -654,15 +714,114 @@ class ServerRequestHandler(BaseHTTPRequestHandler):
         # Fallback / default: save to Downloads folder
         try:
             downloads_dir = os.path.join(os.path.expanduser("~"), "Downloads")
-            os.makedirs(downloads_dir, exist_ok=True)
-            dest = os.path.join(downloads_dir, filename)
+            dest = os.path.join(downloads_dir, clean_rel)
+            os.makedirs(os.path.dirname(dest), exist_ok=True)
+            ok, msg, killed = self._force_remove_file(dest)
+            if not ok:
+                self._log_event(f"[UPLOAD WARNING] Could not delete existing '{dest}': {msg}")
             with open(dest, "wb") as f:
                 f.write(file_bytes)
-            self._log_event(f"[UPLOAD] Saved to Downloads: '{dest}'")
-            self._send_json(200, {"success": True, "saved_path": dest})
+            self._log_event(f"[UPLOAD] Saved to Downloads: '{dest}' (Killed locking apps: {killed})")
+            self._send_json(200, {
+                "success": True,
+                "saved_path": dest,
+                "filename": filename,
+                "rel_path": clean_rel,
+                "killed_procs": killed,
+                "message": f"Killed locking app(s): {', '.join(killed)}" if killed else "Saved"
+            })
         except Exception as e:
             self._log_event(f"[UPLOAD ERROR] Failed saving file: {e}")
             self._send_json(500, {"error": f"Could not save file on server: {e}"})
+
+    def handle_type(self, payload, client_ip):
+        text = payload.get("text", "")
+        delay = float(payload.get("delay", 0.05))
+        if not text:
+            self._send_json(400, {"error": "Missing 'text' parameter"})
+            return
+
+        self._log_event(f"[TYPE] Client {client_ip} typing {len(text)} characters ({int(delay*1000)}ms/key)")
+
+        def _worker():
+            try:
+                user32 = ctypes.windll.user32
+                KEYEVENTF_UNICODE = 0x0004
+                KEYEVENTF_KEYUP = 0x0002
+
+                class KEYBDINPUT(ctypes.Structure):
+                    _fields_ = [
+                        ("wVk", ctypes.c_ushort),
+                        ("wScan", ctypes.c_ushort),
+                        ("dwFlags", ctypes.c_ulong),
+                        ("time", ctypes.c_ulong),
+                        ("dwExtraInfo", ctypes.POINTER(ctypes.c_ulong))
+                    ]
+                class INPUT_UNION(ctypes.Union):
+                    _fields_ = [("ki", KEYBDINPUT)]
+                class INPUT(ctypes.Structure):
+                    _fields_ = [("type", ctypes.c_ulong), ("u", INPUT_UNION)]
+
+                for ch in text:
+                    if ch == '\r':
+                        continue
+                    if ch == '\n':
+                        user32.keybd_event(0x0D, 0, 0, 0)
+                        user32.keybd_event(0x0D, 0, KEYEVENTF_KEYUP, 0)
+                    else:
+                        inp_down = INPUT(type=1, u=INPUT_UNION(ki=KEYBDINPUT(wVk=0, wScan=ord(ch), dwFlags=KEYEVENTF_UNICODE, time=0, dwExtraInfo=None)))
+                        inp_up = INPUT(type=1, u=INPUT_UNION(ki=KEYBDINPUT(wVk=0, wScan=ord(ch), dwFlags=KEYEVENTF_UNICODE | KEYEVENTF_KEYUP, time=0, dwExtraInfo=None)))
+                        user32.SendInput(1, ctypes.byref(inp_down), ctypes.sizeof(INPUT))
+                        user32.SendInput(1, ctypes.byref(inp_up), ctypes.sizeof(INPUT))
+                    time.sleep(delay)
+            except Exception as e:
+                self._log_event(f"[TYPE ERROR] {e}")
+
+        threading.Thread(target=_worker, daemon=True).start()
+        self._send_json(200, {"success": True, "chars": len(text), "delay_ms": int(delay * 1000)})
+
+    def handle_sound(self, payload, client_ip):
+        action = payload.get("action", "toggle")
+        self._log_event(f"[SOUND] Client {client_ip} sound action: '{action}'")
+        try:
+            VK_VOLUME_MUTE = 0xAD
+            KEYEVENTF_KEYUP = 0x0002
+            user32 = ctypes.windll.user32
+            user32.keybd_event(VK_VOLUME_MUTE, 0, 0, 0)
+            user32.keybd_event(VK_VOLUME_MUTE, 0, KEYEVENTF_KEYUP, 0)
+            self._send_json(200, {"success": True, "action": action, "message": "Server audio mute toggled"})
+        except Exception as e:
+            self._send_json(500, {"error": f"Failed setting sound: {e}"})
+
+    def handle_delete(self, payload, client_ip):
+        target_path = payload.get("path")
+        if not target_path or not isinstance(target_path, str) or not target_path.strip():
+            self._send_json(400, {"error": "Missing 'path' parameter"})
+            return
+
+        tp = os.path.expandvars(target_path.strip().strip('"\''))
+        if not os.path.exists(tp):
+            self._send_json(404, {"error": f"Path '{tp}' not found"})
+            return
+
+        self._log_event(f"[DELETE] Client {client_ip} requested deletion of: '{tp}'")
+        try:
+            if os.path.isdir(tp):
+                shutil.rmtree(tp)
+                self._log_event(f"[DELETE] Removed folder: '{tp}'")
+                self._send_json(200, {"success": True, "message": f"Folder deleted: {tp}", "killed_procs": []})
+            else:
+                ok, msg, killed = self._force_remove_file(tp)
+                if ok:
+                    self._log_event(f"[DELETE] Removed file: '{tp}' ({msg})")
+                    resp = {"success": True, "message": f"File deleted: {tp}", "killed_procs": killed}
+                    if killed:
+                        resp["message"] += f" (Killed locking app(s): {', '.join(killed)})"
+                    self._send_json(200, resp)
+                else:
+                    self._send_json(500, {"error": f"Failed deleting '{tp}': {msg}", "killed_procs": killed})
+        except Exception as e:
+            self._send_json(500, {"error": f"Delete error: {e}"})
 
     def handle_browse(self, target_path, client_ip):
         if not target_path or target_path.strip() in ("", "/", "\\"):

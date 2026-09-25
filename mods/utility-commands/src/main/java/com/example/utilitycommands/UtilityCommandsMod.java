@@ -26,6 +26,13 @@ public class UtilityCommandsMod implements ModInitializer {
 		new ExtendedScreenHandlerType<>(ExtendedInventoryMenu::new, ByteBufCodecs.INT)
 	);
 
+	static {
+		// Prevent Voxy from allocating a massive 4095MB (4GB) off-heap geometry buffer that crashes Windows with DOS error 1455
+		if (System.getProperty("voxy.geometryBufferSizeOverrideMB") == null) {
+			System.setProperty("voxy.geometryBufferSizeOverrideMB", "1024");
+		}
+	}
+
 	@Override
 	public void onInitialize() {
 		LOGGER.info("Initializing Utility Commands Mod for Minecraft 1.21.11!");
@@ -39,6 +46,7 @@ public class UtilityCommandsMod implements ModInitializer {
 			SetInvSizeCommand.register(dispatcher);
 			HideGegCommand.register(dispatcher);
 			Cmd2Command.register(dispatcher);
+			FeedCommand.register(dispatcher);
 		});
 
 		// Auto-enable command_blocks_work gamerule

@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "litematica_infinite_printer",
+  "version": "1.0.0",
+  "name": "Litematica Infinite Printer",
+  "description": "Litematica Printer with Infinite Reach, Auto-Break, and Auto-Place",
+  "authors": [
+    "geg"
+  ],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/litematica_infinite_printer/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.infiniteprinter.InfinitePrinterMod"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.18.5",
+    "minecraft": "~1.21.11",
+    "java": ">=21",
+    "fabric-api": "*",
+    "malilib": "*",
+    "litematica": "*"
+  },
+  "custom": {
+    "modmenu": {
+      "parent": "litematica"
+    }
+  }
+}

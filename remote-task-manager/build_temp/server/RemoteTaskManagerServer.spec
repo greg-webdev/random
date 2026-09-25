@@ -1,12 +1,14 @@
 # -*- mode: python ; coding: utf-8 -*-
+from PyInstaller.utils.hooks import collect_data_files
+from PyInstaller.utils.hooks import collect_dynamic_libs
 from PyInstaller.utils.hooks import collect_all
 
 datas = [('C:/Users/LENOVO/Documents/random/remote-task-manager/hand_landmarker.task', '.'), ('C:/Users/LENOVO/Documents/random/remote-task-manager/hand_landmarker.task', 'server')]
 binaries = [('C:/Users/LENOVO/AppData/Local/Packages/PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0/LocalCache/local-packages/Python313/site-packages/imageio_ffmpeg/binaries/ffmpeg-win-x86_64-v7.1.exe', '.'), ('C:/Users/LENOVO/AppData/Local/Packages/PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0/LocalCache/local-packages/Python313/site-packages/imageio_ffmpeg/binaries/ffmpeg-win-x86_64-v7.1.exe', 'imageio_ffmpeg/binaries')]
-hiddenimports = ['pystray._win32', 'PIL', 'cv2', 'gesture_detector', 'server.gesture_detector']
+hiddenimports = ['pystray._win32', 'PIL', 'cv2', 'mediapipe', 'mediapipe.tasks', 'mediapipe.tasks.python', 'mediapipe.tasks.python.vision', 'gesture_detector', 'server.gesture_detector']
+datas += collect_data_files('mediapipe')
+binaries += collect_dynamic_libs('mediapipe')
 tmp_ret = collect_all('imageio_ffmpeg')
-datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
-tmp_ret = collect_all('mediapipe')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
 

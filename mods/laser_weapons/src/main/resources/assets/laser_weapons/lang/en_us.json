@@ -1,0 +1,12 @@
+{
+  "item.laser_weapons.instakill_gun": "Gun",
+  "item.laser_weapons.laser_rocket_launcher": "Rocket Launcher",
+  "item.laser_weapons.handheld_laser": "Handheld Laser",
+  "item.laser_weapons.minigun": "Minigun",
+  "block.laser_weapons.laser_emitter": "Omnidirectional Laser Emitter",
+  "itemGroup.laser_weapons": "Laser Weapons & Turrets",
+  "subtitles.laser_weapons.gun_shot": "Gun fired",
+  "subtitles.laser_weapons.rocket_fire": "Rocket launched",
+  "subtitles.laser_weapons.laser_explosion": "Laser explosion",
+  "subtitles.laser_weapons.laser_hum": "Laser humming"
+}

@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "laser_weapons",
+  "version": "1.0.0",
+  "name": "Laser Weapons & Turrets",
+  "description": "Minecraft 1.21.11 mod adding an Instakill Gun, Rocket Launcher Laser Gun, and Omnidirectional Placeable Laser.",
+  "authors": [
+    "geg"
+  ],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/laser_weapons/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.laserweapons.LaserWeaponsMod"
+    ],
+    "client": [
+      "com.laserweapons.client.LaserWeaponsClient"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.18.5",
+    "minecraft": "~1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}

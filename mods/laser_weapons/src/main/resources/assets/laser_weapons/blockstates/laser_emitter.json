@@ -1,0 +1,30 @@
+{
+  "variants": {
+    "facing=up": {
+      "model": "laser_weapons:block/laser_emitter"
+    },
+    "facing=down": {
+      "model": "laser_weapons:block/laser_emitter",
+      "x": 180
+    },
+    "facing=north": {
+      "model": "laser_weapons:block/laser_emitter",
+      "x": 90
+    },
+    "facing=south": {
+      "model": "laser_weapons:block/laser_emitter",
+      "x": 90,
+      "y": 180
+    },
+    "facing=west": {
+      "model": "laser_weapons:block/laser_emitter",
+      "x": 90,
+      "y": 270
+    },
+    "facing=east": {
+      "model": "laser_weapons:block/laser_emitter",
+      "x": 90,
+      "y": 90
+    }
+  }
+}

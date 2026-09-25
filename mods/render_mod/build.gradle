@@ -11,6 +11,16 @@ repositories {
 	}
 }
 
+loom {
+	runs {
+		client {
+			vmArg "-Xmx2G"
+			vmArg "-Xms512M"
+			vmArg "-XX:+UseG1GC"
+		}
+	}
+}
+
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	mappings loom.officialMojangMappings()
